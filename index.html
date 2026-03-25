@@ -315,6 +315,7 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
 .alert-dismiss:hover{color:var(--tx);background:var(--bg4)}
 #nb-al{background:var(--amber);color:#000}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <!-- SYNC INDICATOR -->
@@ -418,6 +419,10 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
     Fatture Clienti
     <span class="nb" id="nb-cli">0</span>
+  </div>
+  <div class="ni" data-p="banca" onclick="nav('banca')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+    Estratto Conto
   </div>
   <div class="sb-sec">Analisi</div>
   <div class="ni" data-p="centricosto" onclick="nav('centricosto')">
@@ -727,6 +732,144 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
+
+<!-- ESTRATTO CONTO / RICONCILIAZIONE BANCARIA -->
+<div id="page-banca" class="page hidden">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="sbToggle()">☰</button>
+      <div class="ptitle">💳 Riconciliazione Bancaria</div>
+    </div>
+    <div class="tbar-r">
+      <button class="btn btn-sm" onclick="bancaReset()" id="banca-reset-btn" style="display:none">🗑 Nuovo file</button>
+      <button class="btn btn-p btn-sm" onclick="bancaRiconcilia()" id="banca-match-btn" style="display:none">🔍 Riconcilia scadenze</button>
+    </div>
+  </div>
+
+  <div class="pscroll"><div class="pcont">
+
+    <!-- Upload zone -->
+    <div id="banca-upload-section">
+      <div class="g2" style="margin-bottom:18px">
+        <div class="card" style="border:1.5px dashed var(--br2);cursor:pointer;background:var(--bg2);transition:all .2s" id="banca-drop-pdf"
+          ondragover="event.preventDefault();this.classList.add('dov')"
+          ondragleave="this.classList.remove('dov')"
+          ondrop="event.preventDefault();this.classList.remove('dov');bancaLoadFile(event.dataTransfer.files)"
+          onclick="document.getElementById('banca-file-pdf').click()">
+          <div style="text-align:center;padding:14px 0">
+            <div style="font-size:32px;margin-bottom:8px">📄</div>
+            <div style="font-size:14px;font-weight:600;color:var(--tx)">Carica <strong style="color:var(--ac)">PDF</strong> estratto conto</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:5px">Trascina qui o clicca per selezionare</div>
+          </div>
+          <input type="file" id="banca-file-pdf" accept=".pdf" style="display:none" onchange="bancaLoadFile(this.files)">
+        </div>
+        <div class="card" style="border:1.5px dashed var(--br2);cursor:pointer;background:var(--bg2);transition:all .2s" id="banca-drop-xls"
+          ondragover="event.preventDefault();this.classList.add('dov')"
+          ondragleave="this.classList.remove('dov')"
+          ondrop="event.preventDefault();this.classList.remove('dov');bancaLoadFile(event.dataTransfer.files)"
+          onclick="document.getElementById('banca-file-xls').click()">
+          <div style="text-align:center;padding:14px 0">
+            <div style="font-size:32px;margin-bottom:8px">📊</div>
+            <div style="font-size:14px;font-weight:600;color:var(--tx)">Carica <strong style="color:var(--green)">XLS/CSV</strong> estratto conto</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:5px">Excel (.xlsx, .xls) o CSV — Trascina o clicca</div>
+          </div>
+          <input type="file" id="banca-file-xls" accept=".xlsx,.xls,.csv" style="display:none" onchange="bancaLoadFile(this.files)">
+        </div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;background:rgba(79,128,240,.04);border-color:rgba(79,128,240,.15)">
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:8px;font-weight:600">ℹ Come funziona la riconciliazione</div>
+        <div style="font-size:11px;color:var(--tx3);line-height:1.7;max-width:600px;margin:0 auto">
+          Il sistema legge il file bancario e cerca movimenti che corrispondono alle scadenze aperte di <strong style="color:var(--amber)">fornitori</strong> (fatture da pagare) e <strong style="color:var(--teal)">clienti</strong> (fatture da incassare). 
+          Quando trova una corrispondenza per importo e data, segna automaticamente la scadenza come <strong style="color:var(--green)">pagata / incassata</strong>.
+          Puoi rivedere ogni abbinamento prima di confermare.
+        </div>
+      </div>
+    </div>
+
+    <!-- Risultato analisi -->
+    <div id="banca-result-section" class="hidden">
+
+      <!-- KPI riconciliazione -->
+      <div class="kgrid" id="banca-kpi" style="margin-bottom:16px"></div>
+
+      <!-- Tabs -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;margin-bottom:12px">
+        <div class="tab-switch">
+          <button class="tab-btn active" id="btab-matched" onclick="bancaShowTab('matched')">✅ Abbinati</button>
+          <button class="tab-btn" id="btab-unmatched" onclick="bancaShowTab('unmatched')">❓ Non abbinati</button>
+          <button class="tab-btn" id="btab-movimenti" onclick="bancaShowTab('movimenti')">📋 Tutti i movimenti</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-p btn-sm" id="banca-confirm-btn" onclick="bancaConfirma()" style="display:none">✅ Conferma abbinamenti selezionati</button>
+        </div>
+      </div>
+
+      <!-- Tab: Abbinati -->
+      <div id="banca-tab-matched">
+        <div class="tcard">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:12px;font-weight:600;color:var(--tx2)">Movimenti abbinati a scadenze — verifica e seleziona quelli da confermare</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <label style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px;cursor:pointer">
+                <input type="checkbox" id="banca-sel-all" class="xml-chk" onclick="bancaSelAll(this.checked)"> Seleziona tutti
+              </label>
+            </div>
+          </div>
+          <div class="twrap">
+            <table>
+              <thead><tr>
+                <th style="width:32px"></th>
+                <th>Data movimento</th>
+                <th>Descrizione banca</th>
+                <th>Importo</th>
+                <th>Abbinato a</th>
+                <th>Tipo</th>
+                <th>Confidenza</th>
+                <th>Azione</th>
+              </tr></thead>
+              <tbody id="banca-matched-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Non abbinati -->
+      <div id="banca-tab-unmatched" class="hidden">
+        <div class="tcard">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--br)">
+            <div style="font-size:12px;font-weight:600;color:var(--tx2)">Movimenti bancari senza corrispondenza nelle scadenze</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:3px">Questi movimenti non hanno trovato una scadenza corrispondente. Puoi ignorarli o abbinarli manualmente.</div>
+          </div>
+          <div class="twrap">
+            <table>
+              <thead><tr><th>Data</th><th>Descrizione</th><th>Importo</th><th>Tipo</th><th>Abbina manualmente</th></tr></thead>
+              <tbody id="banca-unmatched-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Tutti i movimenti -->
+      <div id="banca-tab-movimenti" class="hidden">
+        <div class="tcard">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--br)">
+            <div style="font-size:12px;font-weight:600;color:var(--tx2)">Tutti i movimenti rilevati dall'estratto conto</div>
+          </div>
+          <div class="twrap">
+            <table>
+              <thead><tr><th>Data</th><th>Descrizione</th><th>Dare (uscita)</th><th>Avere (entrata)</th><th>Saldo</th><th>Stato</th></tr></thead>
+              <tbody id="banca-movimenti-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /result-section -->
+
+  </div></div>
+</div>
+<!-- /ESTRATTO CONTO -->
+
 </main>
 </div>
 
@@ -841,6 +984,19 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
     </div>
     <div class="mact" style="margin-top:12px">
       <button class="btn" onclick="closeCameraModal()">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ABBINAMENTO MANUALE -->
+<div id="m-banca-manual" class="mover hidden">
+  <div class="modal" style="width:560px">
+    <div class="mtitle">🔗 Abbinamento manuale</div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:14px;border:1px solid var(--br)" id="m-banca-mov-info"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Seleziona la scadenza da abbinare</div>
+    <div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px" id="m-banca-sc-list"></div>
+    <div class="mact">
+      <button class="btn" onclick="closeM('m-banca-manual')">Annulla</button>
     </div>
   </div>
 </div>
@@ -1384,7 +1540,7 @@ function nav(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
   document.querySelectorAll('.ni').forEach(x=>x.classList.toggle('active',x.dataset.p===p));
   document.getElementById('page-'+p).classList.remove('hidden');
-  const fn={dashboard:rDash,fatture:rFat,articoli:rArt,fornitori:rForn,centricosto:rCC,report:rReport,clienti:rCli};
+  const fn={dashboard:rDash,fatture:rFat,articoli:rArt,fornitori:rForn,centricosto:rCC,report:rReport,clienti:rCli,banca:()=>{}};
   if(fn[p]) fn[p]();
 }
 
@@ -4763,6 +4919,562 @@ document.addEventListener('DOMContentLoaded',async ()=>{
     }
   });
 });
+// ══════════════════════════════════════════
+// RICONCILIAZIONE BANCARIA
+// ══════════════════════════════════════════
+
+let BANCA_MOVIMENTI = [];   // tutti i movimenti estratti dal file
+let BANCA_MATCHED   = [];   // {mov, scad, tipo, conf, selected}
+let BANCA_UNMATCHED = [];   // movimenti senza abbinamento
+let BANCA_SELECTED  = new Set(); // indici in BANCA_MATCHED selezionati
+
+// ── Ingresso file ─────────────────────────────────────────────────────────
+async function bancaLoadFile(files){
+  if(!files||!files.length) return;
+  const file = files[0];
+  const ext  = file.name.split('.').pop().toLowerCase();
+  toast('⏳ Lettura file in corso…', true);
+  try {
+    if(ext === 'csv'){
+      await bancaParseCsv(file);
+    } else if(ext === 'xlsx' || ext === 'xls'){
+      await bancaParseXlsx(file);
+    } else if(ext === 'pdf'){
+      await bancaParsePdf(file);
+    } else {
+      toast('Formato non supportato: usa PDF, XLSX o CSV', false);
+      return;
+    }
+    if(!BANCA_MOVIMENTI.length){
+      toast('Nessun movimento trovato nel file. Controlla il formato.', false);
+      return;
+    }
+    toast('✓ '+BANCA_MOVIMENTI.length+' movimenti caricati', true);
+    document.getElementById('banca-reset-btn').style.display='';
+    document.getElementById('banca-match-btn').style.display='';
+    document.getElementById('banca-upload-section').classList.add('hidden');
+    bancaRiconcilia();
+  } catch(e){
+    console.error(e);
+    toast('Errore lettura file: '+e.message, false);
+  }
+}
+
+// ── CSV parser ─────────────────────────────────────────────────────────────
+function bancaParseCsv(file){
+  return new Promise((res,rej)=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const text = e.target.result;
+        BANCA_MOVIMENTI = parseCsvMovimenti(text);
+        res();
+      } catch(err){ rej(err); }
+    };
+    reader.onerror = () => rej(new Error('Errore lettura CSV'));
+    reader.readAsText(file,'UTF-8');
+  });
+}
+
+function parseCsvMovimenti(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length) return [];
+  // Detect separator
+  const sep = lines[0].includes(';') ? ';' : ',';
+  const header = lines[0].split(sep).map(h=>h.replace(/"/g,'').trim().toLowerCase());
+  const movs = [];
+  // Map common column names
+  const colData   = findCol(header,['data','date','data valuta','data operazione','data mov']);
+  const colDesc   = findCol(header,['descrizione','description','causale','dettaglio','operazione','detail']);
+  const colDare   = findCol(header,['dare','uscita','addebito','debit','spesa','pagamento']);
+  const colAvere  = findCol(header,['avere','entrata','accredito','credit','incasso','versamento']);
+  const colImp    = findCol(header,['importo','amount','valore','value','movimento']);
+  const colSaldo  = findCol(header,['saldo','balance','saldo contabile']);
+
+  for(let i=1;i<lines.length;i++){
+    const row = splitCsvRow(lines[i], sep);
+    if(row.length < 2) continue;
+    const dateRaw = colData>=0 ? row[colData]?.replace(/"/g,'').trim() : '';
+    const desc    = colDesc>=0 ? row[colDesc]?.replace(/"/g,'').trim()  : row.join(' ');
+    let dare=0, avere=0;
+    if(colDare>=0)  dare  = parseEuro(row[colDare]);
+    if(colAvere>=0) avere = parseEuro(row[colAvere]);
+    if(colImp>=0 && dare===0 && avere===0){
+      const v = parseEuro(row[colImp]);
+      if(v<0) dare=Math.abs(v); else avere=v;
+    }
+    const saldo = colSaldo>=0 ? parseEuro(row[colSaldo]) : null;
+    const dt = parseDate(dateRaw);
+    if(!dt||(!dare&&!avere)) continue;
+    movs.push({ dt, desc, dare, avere, saldo, raw:lines[i], abbinato:false });
+  }
+  return movs;
+}
+
+function splitCsvRow(line, sep){
+  const result=[], re=new RegExp(`(?:^|${sep})("(?:[^"]*(?:""[^"]*)*)"|((?:(?!${sep}).)*))`, 'g');
+  let m;
+  while((m=re.exec(line))!==null){
+    result.push((m[1]?m[1].slice(1,-1).replace(/""/g,'"'):m[2])||'');
+  }
+  return result;
+}
+
+// ── XLSX parser ─────────────────────────────────────────────────────────────
+function bancaParseXlsx(file){
+  return new Promise((res,rej)=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        // Simple XLSX: try to read as binary, extract sheets
+        // We use a lightweight approach — read as ArrayBuffer and parse manually
+        // For robustness, first try to use SheetJS if available
+        if(typeof XLSX !== 'undefined'){
+          const wb = XLSX.read(e.target.result, {type:'array'});
+          const ws  = wb.Sheets[wb.SheetNames[0]];
+          const csv = XLSX.utils.sheet_to_csv(ws, {FS:';'});
+          BANCA_MOVIMENTI = parseCsvMovimenti(csv);
+        } else {
+          // Fallback: read as text (works for some .csv saved as .xlsx)
+          const text = new TextDecoder('utf-8').decode(new Uint8Array(e.target.result));
+          BANCA_MOVIMENTI = parseCsvMovimenti(text);
+        }
+        res();
+      } catch(err){ rej(err); }
+    };
+    reader.onerror = () => rej(new Error('Errore lettura XLSX'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ── PDF parser ──────────────────────────────────────────────────────────────
+function bancaParsePdf(file){
+  return new Promise((res,rej)=>{
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        // Use Anthropic API to extract movements from PDF
+        const base64 = arrayBufferToBase64(e.target.result);
+        const response = await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            model:'claude-sonnet-4-20250514',
+            max_tokens:4000,
+            messages:[{
+              role:'user',
+              content:[
+                {type:'document', source:{type:'base64', media_type:'application/pdf', data:base64}},
+                {type:'text', text:`Analizza questo estratto conto bancario ed estrai TUTTI i movimenti.
+Rispondi SOLO con un JSON array, senza markdown, nel formato esatto:
+[{"dt":"YYYY-MM-DD","desc":"descrizione movimento","dare":0.00,"avere":0.00,"saldo":0.00}]
+- dt: data in formato YYYY-MM-DD
+- desc: descrizione/causale del movimento (testo completo)
+- dare: importo in uscita (positivo, 0 se assente)
+- avere: importo in entrata (positivo, 0 se assente)  
+- saldo: saldo dopo il movimento (0 se non disponibile)
+Includi TUTTI i movimenti visibili. Solo JSON, nessun testo aggiuntivo.`}
+              ]
+            }]
+          })
+        });
+        const data = await response.json();
+        const txt  = (data.content||[]).map(b=>b.text||'').join('');
+        const clean= txt.replace(/```json|```/g,'').trim();
+        const arr  = JSON.parse(clean);
+        BANCA_MOVIMENTI = arr.map(m=>({
+          dt:   m.dt||'',
+          desc: m.desc||'',
+          dare: parseFloat(m.dare)||0,
+          avere:parseFloat(m.avere)||0,
+          saldo:parseFloat(m.saldo)||null,
+          raw:  JSON.stringify(m),
+          abbinato:false
+        })).filter(m=>m.dt&&(m.dare||m.avere));
+        res();
+      } catch(err){ rej(err); }
+    };
+    reader.onerror = () => rej(new Error('Errore lettura PDF'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function arrayBufferToBase64(buf){
+  let bin=''; const bytes=new Uint8Array(buf);
+  for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────
+function findCol(header, names){
+  for(const n of names){
+    const i=header.findIndex(h=>h.includes(n));
+    if(i>=0) return i;
+  }
+  return -1;
+}
+
+function parseEuro(s){
+  if(!s) return 0;
+  const clean=String(s).replace(/[€$£\s]/g,'').replace(/\.(?=\d{3})/g,'').replace(',','.');
+  return parseFloat(clean)||0;
+}
+
+function parseDate(s){
+  if(!s) return null;
+  // Try ISO
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  // DD/MM/YYYY or DD-MM-YYYY
+  const m1=/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/.exec(s);
+  if(m1) return `${m1[3]}-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
+  // MM/DD/YYYY
+  const m2=/(\d{1,2})[\/](\d{1,2})[\/](\d{2,4})/.exec(s);
+  if(m2){ const yr=m2[3].length===2?'20'+m2[3]:m2[3]; return `${yr}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`; }
+  return null;
+}
+
+// ── Riconciliazione principale ─────────────────────────────────────────────
+function bancaRiconcilia(){
+  BANCA_MATCHED   = [];
+  BANCA_UNMATCHED = [];
+  BANCA_SELECTED  = new Set();
+  const TOL_PERC = 0.02;   // tolleranza importo ±2%
+  const TOL_DAYS = 20;     // tolleranza data ±20 giorni
+
+  // Raccoglie tutte le scadenze aperte (fornitori + clienti)
+  const scadenze = [];
+
+  // FORNITORI: scadenze da pagare
+  FAT.forEach(f=>{
+    const scs = getFatScadenze(f);
+    if(scs.length){
+      scs.forEach((s,si)=>{
+        if(s.sta!=='pagata'&&s.data&&s.imp){
+          scadenze.push({tipo:'fornitore', tipoLabel:'Fornitore', fat:f, scIdx:si, data:s.data, imp:s.imp, nome:f.fo, num:f.num, nt:s.nt});
+        }
+      });
+    } else if(f.sta!=='pagata'&&f.sc&&f.imp){
+      scadenze.push({tipo:'fornitore', tipoLabel:'Fornitore', fat:f, scIdx:-1, data:f.sc, imp:f.imp, nome:f.fo, num:f.num, nt:''});
+    }
+  });
+
+  // CLIENTI: scadenze da incassare
+  FAT_CLIENTI.forEach(c=>{
+    if(c.scadenze&&Array.isArray(c.scadenze)){
+      c.scadenze.forEach((s,si)=>{
+        if(s.sta!=='incassata'&&s.data&&s.imp){
+          scadenze.push({tipo:'cliente', tipoLabel:'Cliente', fat:c, scIdx:si, data:s.data, imp:s.imp, nome:c.cli, num:c.num, nt:s.nt||''});
+        }
+      });
+    } else if(c.sta!=='incassata'&&c.scadenze&&c.imp){
+      const dt = c.scadenze[0]?.data||'';
+      if(dt) scadenze.push({tipo:'cliente', tipoLabel:'Cliente', fat:c, scIdx:-1, data:dt, imp:c.imp, nome:c.cli, num:c.num, nt:''});
+    }
+  });
+
+  const usedSc = new Set();
+
+  BANCA_MOVIMENTI.forEach((mov,mi)=>{
+    // uscite = fornitori (dare), entrate = clienti (avere)
+    const isUscita  = mov.dare  > 0;
+    const isEntrata = mov.avere > 0;
+    let best=null, bestScore=-1;
+
+    scadenze.forEach((sc,si)=>{
+      if(usedSc.has(si)) return;
+      // tipo corretto?
+      if(isUscita  && sc.tipo!=='fornitore') return;
+      if(isEntrata && sc.tipo!=='cliente')   return;
+      const movAmt = isUscita ? mov.dare : mov.avere;
+
+      // Tolleranza importo
+      const diff = Math.abs(movAmt - sc.imp);
+      if(diff/sc.imp > TOL_PERC && diff > 1.00) return; // fuori tolleranza
+
+      // Tolleranza data
+      const diffDays = Math.abs((new Date(mov.dt)-new Date(sc.data))/86400000);
+      if(diffDays > TOL_DAYS) return;
+
+      // Score (più alto = migliore)
+      const impScore  = 1 - diff/Math.max(sc.imp,1);
+      const dateScore = 1 - diffDays/TOL_DAYS;
+      const score     = impScore*0.7 + dateScore*0.3;
+      if(score > bestScore){ bestScore=score; best={sc,si}; }
+    });
+
+    if(best){
+      usedSc.add(best.si);
+      const conf = bestScore>=0.95?'alta':bestScore>=0.75?'media':'bassa';
+      BANCA_MATCHED.push({ mov, movIdx:mi, sc:best.sc, scIdx:best.si, score:bestScore, conf, selected:true });
+      BANCA_SELECTED.add(BANCA_MATCHED.length-1);
+    } else {
+      BANCA_UNMATCHED.push({ mov, movIdx:mi });
+    }
+  });
+
+  renderBancaResult();
+}
+
+// ── Render risultati ────────────────────────────────────────────────────────
+function renderBancaResult(){
+  document.getElementById('banca-result-section').classList.remove('hidden');
+
+  // KPI
+  const totAbb   = BANCA_MATCHED.length;
+  const totUnm   = BANCA_UNMATCHED.length;
+  const totMov   = BANCA_MOVIMENTI.length;
+  const totEuro  = BANCA_MATCHED.reduce((s,m)=>s+(m.mov.dare||m.mov.avere),0);
+  const percConf = totMov ? Math.round(totAbb/totMov*100) : 0;
+
+  const kpiEl = document.getElementById('banca-kpi');
+  kpiEl.innerHTML=`
+    <div class="kcard" style="--kc:#34d399"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--green)"></div><div class="kcard-ico">✅</div><div class="kcard-lbl">Abbinati</div><div class="kcard-val" style="color:var(--green)">${totAbb}</div><div class="kcard-sub">${percConf}% dei movimenti</div></div>
+    <div class="kcard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--amber)"></div><div class="kcard-ico">❓</div><div class="kcard-lbl">Non abbinati</div><div class="kcard-val" style="color:var(--amber)">${totUnm}</div><div class="kcard-sub">Verifica manuale</div></div>
+    <div class="kcard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac)"></div><div class="kcard-ico">💳</div><div class="kcard-lbl">Tot. movimenti</div><div class="kcard-val">${totMov}</div><div class="kcard-sub">Nel file bancario</div></div>
+    <div class="kcard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--teal)"></div><div class="kcard-ico">€</div><div class="kcard-lbl">Volume riconciliato</div><div class="kcard-val" style="font-size:17px">${fmtE(totEuro)}</div><div class="kcard-sub">Da confermare</div></div>
+  `;
+
+  bancaShowTab('matched');
+  if(BANCA_MATCHED.length) document.getElementById('banca-confirm-btn').style.display='';
+}
+
+function bancaShowTab(tab){
+  ['matched','unmatched','movimenti'].forEach(t=>{
+    document.getElementById('banca-tab-'+t).classList.toggle('hidden', t!==tab);
+    document.getElementById('btab-'+t).classList.toggle('active', t===tab);
+  });
+  if(tab==='matched')    renderBancaMatched();
+  if(tab==='unmatched')  renderBancaUnmatched();
+  if(tab==='movimenti')  renderBancaMovimenti();
+}
+
+function renderBancaMatched(){
+  const confColor={alta:'var(--green)',media:'var(--amber)',bassa:'var(--red)'};
+  const tbody = document.getElementById('banca-matched-body');
+  if(!BANCA_MATCHED.length){
+    tbody.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ico">🔍</div><div style="font-size:13px">Nessun abbinamento trovato</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = BANCA_MATCHED.map((m,i)=>{
+    const sel  = BANCA_SELECTED.has(i);
+    const tipo = m.sc.tipo==='fornitore';
+    const amt  = m.mov.dare||m.mov.avere;
+    const tipoBadge = tipo
+      ? '<span class="badge ba" style="font-size:10px">🏭 Fornitore</span>'
+      : '<span class="badge" style="background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.2);font-size:10px">🧾 Cliente</span>';
+    const confBadge = `<span style="font-size:10px;font-weight:600;color:${confColor[m.conf]||'var(--tx3)'}">${{alta:'●● Alta',media:'● Media',bassa:'○ Bassa'}[m.conf]}</span>`;
+    return `<tr style="${sel?'background:rgba(52,211,153,.04)':''}" id="banca-mrow-${i}">
+      <td><input type="checkbox" class="xml-chk" ${sel?'checked':''} onchange="bancaToggleSel(${i},this.checked)"></td>
+      <td style="font-size:12px;color:var(--tx2);font-family:monospace">${m.mov.dt}</td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${m.mov.desc}">${m.mov.desc}</td>
+      <td style="font-family:monospace;font-size:13px;font-weight:500;color:${tipo?'var(--red)':'var(--green)'}">${tipo?'-':'+'} ${fmtE(amt)}</td>
+      <td style="font-size:12px">
+        <div style="font-weight:500">${m.sc.nome}</div>
+        <div style="font-size:10px;color:var(--tx3);font-family:monospace">${m.sc.num}${m.sc.nt?' · '+m.sc.nt:''} · Scad. ${m.sc.data}</div>
+        <div style="font-size:10px;color:var(--tx3)">Importo sc.: ${fmtE(m.sc.imp)}</div>
+      </td>
+      <td>${tipoBadge}</td>
+      <td>${confBadge}</td>
+      <td>
+        <button class="btn btn-xs" onclick="bancaPreviewMatch(${i})">👁</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderBancaUnmatched(){
+  const tbody = document.getElementById('banca-unmatched-body');
+  if(!BANCA_UNMATCHED.length){
+    tbody.innerHTML='<tr><td colspan="5"><div class="empty"><div class="empty-ico">✅</div><div style="font-size:13px">Tutti i movimenti sono stati abbinati</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = BANCA_UNMATCHED.map((u,i)=>{
+    const isUsc = u.mov.dare>0;
+    return `<tr>
+      <td style="font-family:monospace;font-size:12px;color:var(--tx2)">${u.mov.dt}</td>
+      <td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${u.mov.desc}">${u.mov.desc}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--red)">${u.mov.dare?fmtE(u.mov.dare):'—'}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--green)">${u.mov.avere?fmtE(u.mov.avere):'—'}</td>
+      <td><button class="btn btn-xs" onclick="bancaAbbinaManualeOpen(${i})" title="Abbina manualmente">🔗 Abbina</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderBancaMovimenti(){
+  const tbody = document.getElementById('banca-movimenti-body');
+  tbody.innerHTML = BANCA_MOVIMENTI.map((m,i)=>{
+    const isAbb = BANCA_MATCHED.some(x=>x.movIdx===i);
+    return `<tr>
+      <td style="font-family:monospace;font-size:12px;color:var(--tx2)">${m.dt}</td>
+      <td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${m.desc}">${m.desc}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--red)">${m.dare?fmtE(m.dare):'—'}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--green)">${m.avere?fmtE(m.avere):'—'}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--tx3)">${m.saldo!=null?fmtE(m.saldo):'—'}</td>
+      <td>${isAbb?'<span class="badge bg" style="font-size:10px">✓ Abbinato</span>':'<span class="badge" style="background:rgba(251,191,36,.1);color:var(--amber);border:1px solid rgba(251,191,36,.2);font-size:10px">❓ Non abb.</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Selezione e conferma ───────────────────────────────────────────────────
+function bancaSelAll(checked){
+  BANCA_MATCHED.forEach((_,i)=>{ if(checked) BANCA_SELECTED.add(i); else BANCA_SELECTED.delete(i); });
+  renderBancaMatched();
+}
+
+function bancaToggleSel(i, checked){
+  if(checked) BANCA_SELECTED.add(i); else BANCA_SELECTED.delete(i);
+  document.getElementById('banca-sel-all').checked = BANCA_SELECTED.size===BANCA_MATCHED.length;
+}
+
+function bancaPreviewMatch(i){
+  const m = BANCA_MATCHED[i];
+  if(!m) return;
+  const tipo = m.sc.tipo==='fornitore';
+  toast(`${m.sc.nome} · ${fmtE(m.sc.imp)} · Confidenza: ${m.conf}`, true);
+}
+
+function bancaConfirma(){
+  if(!BANCA_SELECTED.size){ toast('Nessun abbinamento selezionato', false); return; }
+  let countOk=0, errors=[];
+  BANCA_SELECTED.forEach(i=>{
+    const m = BANCA_MATCHED[i];
+    if(!m) return;
+    try {
+      if(m.sc.tipo==='fornitore'){
+        const f = m.sc.fat;
+        const scs = getFatScadenze(f);
+        if(m.sc.scIdx>=0 && scs[m.sc.scIdx]){
+          scs[m.sc.scIdx].sta   = 'pagata';
+          scs[m.sc.scIdx].dpag  = m.mov.dt;
+        } else {
+          f.sta   = 'pagata';
+          f.dpag  = m.mov.dt;
+          f.mpag  = f.mpag||'bonifico';
+        }
+        f.sta = getFatStaFromScadenze(f);
+        f.sc  = getFatNextSc(f);
+        if(f.sta==='pagata'){ f.dpag=m.mov.dt; f.mpag=f.mpag||'bonifico'; }
+      } else {
+        const c = m.sc.fat;
+        if(c.scadenze && Array.isArray(c.scadenze) && m.sc.scIdx>=0 && c.scadenze[m.sc.scIdx]){
+          c.scadenze[m.sc.scIdx].sta  = 'incassata';
+          c.scadenze[m.sc.scIdx].dpag = m.mov.dt;
+        } else {
+          c.sta  = 'incassata';
+          c.dpag = m.mov.dt;
+        }
+        // Ricalcola stato globale cliente
+        if(c.scadenze && Array.isArray(c.scadenze)){
+          const open = c.scadenze.filter(s=>s.sta!=='incassata');
+          c.sta = open.length===0?'incassata':'da_incassare';
+        }
+      }
+      countOk++;
+    } catch(e){ errors.push(e.message); }
+  });
+
+  saveData();
+  updBadge();
+
+  if(countOk)   toast('✅ '+countOk+' scadenz'+(countOk===1?'a marcata':'e marcate')+' come pagate/incassate!', true);
+  if(errors.length) toast('⚠ '+errors.length+' errori durante la conferma', false);
+
+  // Rimuovi abbinamenti confermati
+  const confirmed = [...BANCA_SELECTED];
+  BANCA_MATCHED = BANCA_MATCHED.filter((_,i)=>!confirmed.includes(i));
+  BANCA_SELECTED.clear();
+
+  renderBancaResult();
+  if(typeof rFat==='function') rFat();
+  if(typeof rCli==='function') rCli();
+}
+
+// ── Abbinamento manuale ────────────────────────────────────────────────────
+function bancaAbbinaManualeOpen(unmatchedIdx){
+  const u = BANCA_UNMATCHED[unmatchedIdx];
+  if(!u) return;
+  const mov = u.mov;
+  const isUsc = mov.dare > 0;
+
+  document.getElementById('m-banca-mov-info').innerHTML=`
+    <div style="font-size:11px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Movimento bancario</div>
+    <div style="font-size:14px;font-weight:600">${mov.desc}</div>
+    <div style="display:flex;gap:14px;margin-top:6px;font-family:monospace;font-size:12px">
+      <span style="color:var(--tx2)">📅 ${mov.dt}</span>
+      <span style="color:${isUsc?'var(--red)':'var(--green)'}">€ ${isUsc?mov.dare:mov.avere}</span>
+    </div>
+  `;
+
+  // Costruisce lista scadenze compatibili
+  const scadenze=[];
+  if(isUsc){
+    FAT.forEach(f=>{
+      getFatScadenze(f).forEach((s,si)=>{
+        if(s.sta!=='pagata'&&s.data&&s.imp) scadenze.push({tipo:'fornitore',fat:f,scIdx:si,data:s.data,imp:s.imp,nome:f.fo,num:f.num,nt:s.nt});
+      });
+    });
+  } else {
+    FAT_CLIENTI.forEach(c=>{
+      (c.scadenze||[]).forEach((s,si)=>{
+        if(s.sta!=='incassata'&&s.data&&s.imp) scadenze.push({tipo:'cliente',fat:c,scIdx:si,data:s.data,imp:s.imp,nome:c.cli,num:c.num,nt:s.nt||''});
+      });
+    });
+  }
+
+  const listEl = document.getElementById('m-banca-sc-list');
+  listEl.innerHTML = scadenze.length ? scadenze.map((sc,si)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--br);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:border-color .12s"
+      onmouseover="this.style.borderColor='var(--ac)'" onmouseout="this.style.borderColor='var(--br)'"
+      onclick="bancaManualMatch(${unmatchedIdx},${si},[${scadenze.map(s=>`'${s.tipo}'`).join(',')}])">
+      <div>
+        <div style="font-weight:500;font-size:13px">${sc.nome}</div>
+        <div style="font-size:11px;color:var(--tx3);font-family:monospace;margin-top:2px">${sc.num}${sc.nt?' · '+sc.nt:''} · Scad. ${sc.data}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:monospace;font-size:13px;font-weight:600">${fmtE(sc.imp)}</div>
+        ${sc.tipo==='fornitore'?'<span class="badge ba" style="font-size:10px">Fornitore</span>':'<span class="badge" style="background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.2);font-size:10px">Cliente</span>'}
+      </div>
+    </div>`).join('')
+  : '<div style="text-align:center;padding:30px;color:var(--tx3);font-size:13px">Nessuna scadenza aperta disponibile</div>';
+
+  openM('m-banca-manual');
+  // Store context
+  document.getElementById('m-banca-sc-list').dataset.unmIdx = unmatchedIdx;
+  document.getElementById('m-banca-sc-list').dataset.scList = JSON.stringify(scadenze.map(s=>({...s,fat:undefined})));
+  window._bancaManualScadenze = scadenze;
+}
+
+function bancaManualMatch(unmatchedIdx, scIdx, _tipos){
+  const u  = BANCA_UNMATCHED[unmatchedIdx];
+  const sc = window._bancaManualScadenze[scIdx];
+  if(!u||!sc) return;
+  closeM('m-banca-manual');
+  // Add to matched
+  BANCA_MATCHED.push({ mov:u.mov, movIdx:u.movIdx, sc, scIdx, score:0.6, conf:'manuale', selected:true });
+  BANCA_SELECTED.add(BANCA_MATCHED.length-1);
+  // Remove from unmatched
+  BANCA_UNMATCHED.splice(unmatchedIdx,1);
+  toast('Abbinamento manuale aggiunto — clicca "Conferma" per salvare', true);
+  renderBancaResult();
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────
+function bancaReset(){
+  BANCA_MOVIMENTI=[];
+  BANCA_MATCHED=[];
+  BANCA_UNMATCHED=[];
+  BANCA_SELECTED.clear();
+  document.getElementById('banca-upload-section').classList.remove('hidden');
+  document.getElementById('banca-result-section').classList.add('hidden');
+  document.getElementById('banca-reset-btn').style.display='none';
+  document.getElementById('banca-match-btn').style.display='none';
+  document.getElementById('banca-confirm-btn').style.display='none';
+  ['banca-file-pdf','banca-file-xls'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+// Aggiungi 'banca' al nav router
+const _origNav = nav;
+// (nav già gestisce pagine via getElementById('page-'+p), funziona automaticamente)
+
 </script>
-</body>
 </html>
