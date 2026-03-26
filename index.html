@@ -417,7 +417,6 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
     </div>
     <div class="tbar-r">
       <span style="font-size:11px;color:var(--tx3)" id="dd-date"></span>
-      <span id="gist-cfg-warn" style="display:none;font-size:11px;background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);border-radius:6px;padding:3px 9px;cursor:pointer" onclick="openGistSetup()" title="Clicca per le istruzioni di configurazione">⚠ Cloud non configurato — clicca qui</span>
       <label class="btn btn-sm" for="pdf-d" style="cursor:pointer">📄 PDF</label>
       <input type="file" id="pdf-d" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="doPDF(this.files)">
       <button class="btn btn-sm" onclick="openCameraModal()">📷 Foto</button>
@@ -4600,38 +4599,22 @@ function copySollecito(){
 
 // ══════════════════════════════════════════
 // ══════════════════════════════════════════
-// STORAGE — Firebase Realtime Database
+// STORAGE — GitHub Gist API
 // Funziona da GitHub Pages, file://, qualsiasi origine.
 // Nessun header custom → nessun problema CORS.
 // ══════════════════════════════════════════
 
 // ── CONFIGURAZIONE ────────────────────────────────────────────────────────
-// GitHub Gist come backend — funziona da qualsiasi origine, incluso GitHub Pages.
-// Nessun problema CORS. Gratuito. Nessuna configurazione server.
-//
-// ISTRUZIONI SETUP (una volta sola):
-// 1. Vai su https://gist.github.com → crea un nuovo Gist
-//    - Nome file: gestfatture_data.json
-//    - Contenuto: {}
-//    - Visibilità: Secret (o Public)
-//    - Clicca "Create secret gist"
-// 2. Copia l'ID del Gist dall'URL (la parte dopo /username/)
-//    Es: https://gist.github.com/username/ABC123DEF → ID = ABC123DEF
-// 3. Vai su https://github.com/settings/tokens → Generate new token (classic)
-//    - Nome: GestFatture
-//    - Scope: spunta solo "gist"
-//    - Clicca Generate token → copia il token
-// 4. Incolla ID e token qui sotto:
+// npoint.io — API JSON pubblica, CORS aperto, nessun token necessario.
+// Funziona da GitHub Pages, file://, qualsiasi origine.
+// L'endpoint viene creato automaticamente al primo avvio.
 // ─────────────────────────────────────────────────────────────────────────
-const GIST_ID    = '';   // ← incolla qui l'ID del Gist
-const GIST_TOKEN = '';   // ← incolla qui il token GitHub
-const GIST_FILE  = 'gestfatture_data.json';
-const STORE_KEY  = 'gestfatture_v7_local';
-// ─────────────────────────────────────────────────────────────────────────
+const STORE_KEY   = 'gestfatture_v7_local';
+const NPOINT_KEY  = 'gestfatture_npoint_id';  // localStorage key per l'ID endpoint
+let   NPOINT_ID   = localStorage.getItem('gestfatture_npoint_id') || '';
 
 let syncTimeout = null;
 let isSyncing   = false;
-let _cloudConfigOk = false;  // true se GIST_ID e GIST_TOKEN sono configurati
 
 // ── STATUS ────────────────────────────────────────────────────────────────
 function showSync(state, msg){
@@ -4642,100 +4625,103 @@ function showSync(state, msg){
   if(el){
     el.className='show '+state;
     if(ico) ico.textContent = icons[state]||'⟳';
-    const msgEl = document.getElementById('sync-msg');
-    if(msgEl) msgEl.textContent = msg;
+    const msgEl=document.getElementById('sync-msg');
+    if(msgEl) msgEl.textContent=msg;
     clearTimeout(el._t);
     if(state!=='syncing') el._t=setTimeout(()=>el.classList.remove('show'),3000);
   }
   if(lbl){
-    lbl.textContent = (icons[state]||'')+' '+msg;
-    lbl.style.color = state==='ok'?'var(--green)':state==='err'?'var(--red)':'var(--amber)';
+    lbl.textContent=(icons[state]||'')+' '+msg;
+    lbl.style.color=state==='ok'?'var(--green)':state==='err'?'var(--red)':'var(--amber)';
   }
 }
 
 function splashMsg(msg, pct){
-  const m = document.getElementById('splash-msg');
-  const b = document.getElementById('splash-bar');
-  if(m) m.textContent = msg;
-  if(b) b.style.width = (pct||0)+'%';
+  const m=document.getElementById('splash-msg');
+  const b=document.getElementById('splash-bar');
+  if(m) m.textContent=msg;
+  if(b) b.style.width=(pct||0)+'%';
 }
 
-// Stub per compatibilità con vecchio codice rimasto
+// Stub compatibilità
 function togglePwd(id,btn){ const i=document.getElementById(id);if(!i)return;i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁':'🙈'; }
 function switchLoginTab(){}
 function doLogin(){}
 function doSignup(){}
 function doLogout(){ location.reload(); }
 
-// ── GITHUB GIST API ──────────────────────────────────────────────────────
-function _cloudOk(){
-  _cloudConfigOk = !!(GIST_ID && GIST_TOKEN);
-  return _cloudConfigOk;
+// ── NPOINT.IO API ─────────────────────────────────────────────────────────
+// Crea un nuovo endpoint con i dati iniziali
+async function npCreate(data){
+  const r = await fetch('https://api.npoint.io/create', {
+    method:  'POST',
+    headers: {'Content-Type':'application/json'},
+    body:    JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error('npoint create '+r.status);
+  const j = await r.json();
+  return j.id;   // es. "c82f5e9b3d7a1f4e8c6d"
 }
 
-async function gistGET(){
-  if(!_cloudOk()) throw new Error('Gist non configurato');
-  const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-    headers: {
-      'Authorization': `token ${GIST_TOKEN}`,
-      'Accept': 'application/vnd.github.v3+json'
-    }
-  });
-  if(!r.ok) throw new Error('Gist GET '+r.status);
-  const gist = await r.json();
-  const content = gist.files?.[GIST_FILE]?.content || 'null';
-  return JSON.parse(content);
-}
-
-async function gistPUT(data){
-  if(!_cloudOk()) throw new Error('Gist non configurato');
-  const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-    method: 'PATCH',
-    headers: {
-      'Authorization': `token ${GIST_TOKEN}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      files: {
-        [GIST_FILE]: { content: JSON.stringify(data) }
-      }
-    })
-  });
-  if(!r.ok) throw new Error('Gist PATCH '+r.status);
+// Legge i dati dall'endpoint
+async function npGet(){
+  if(!NPOINT_ID) return null;
+  const r = await fetch(`https://api.npoint.io/${NPOINT_ID}`);
+  if(r.status===404) return null;
+  if(!r.ok) throw new Error('npoint get '+r.status);
   return r.json();
+}
+
+// Scrive i dati nell'endpoint
+async function npSet(data){
+  if(!NPOINT_ID) throw new Error('npoint ID mancante');
+  const r = await fetch(`https://api.npoint.io/${NPOINT_ID}`, {
+    method:  'PUT',
+    headers: {'Content-Type':'application/json'},
+    body:    JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error('npoint put '+r.status);
+  return r.json();
+}
+
+// Inizializza: recupera o crea l'endpoint
+async function npEnsure(){
+  if(NPOINT_ID) return;
+  const empty={FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:''};
+  NPOINT_ID = await npCreate(empty);
+  localStorage.setItem(NPOINT_KEY, NPOINT_ID);
+  showSync('ok','Endpoint cloud creato ✓');
 }
 
 // ── SAVE ─────────────────────────────────────────────────────────────────
 function saveData(){
   const ts = new Date().toISOString();
-  const payload = {FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts};
-  // 1. localStorage istantaneo (funziona sempre, anche offline)
-  try{ localStorage.setItem(STORE_KEY, JSON.stringify(payload)); }catch(e){}
-  // 2. cloud con debounce 1.5s (evita troppe scritture durante import batch)
+  const payload={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts};
+  // 1. localStorage istantaneo
+  try{ localStorage.setItem(STORE_KEY,JSON.stringify(payload)); }catch(e){}
+  // 2. cloud con debounce
   clearTimeout(syncTimeout);
-  syncTimeout = setTimeout(syncToCloud, 1500);
+  syncTimeout=setTimeout(syncToCloud,1500);
 }
 
 async function syncToCloud(){
   if(isSyncing) return;
-  if(!_cloudOk()){ showSync('err','Configura GIST_ID e GIST_TOKEN nel file HTML'); return; }
-  isSyncing = true;
-  showSync('syncing','Salvataggio cloud…');
+  isSyncing=true;
+  showSync('syncing','Salvataggio…');
   try{
-    const ts = new Date().toISOString();
-    await gistPUT({FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts});
-    // Aggiorna _saved anche nel locale
+    await npEnsure();
+    const ts=new Date().toISOString();
+    await npSet({FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts});
     try{
-      const raw = localStorage.getItem(STORE_KEY);
-      if(raw){ const p=JSON.parse(raw); p._saved=ts; localStorage.setItem(STORE_KEY,JSON.stringify(p)); }
+      const raw=localStorage.getItem(STORE_KEY);
+      if(raw){const p=JSON.parse(raw);p._saved=ts;localStorage.setItem(STORE_KEY,JSON.stringify(p));}
     }catch(e){}
     showSync('ok','Sincronizzato ✓');
   }catch(e){
-    console.warn('Cloud sync error:',e);
-    showSync('err','Solo locale — riprovo tra 20s');
+    console.warn('Sync error:',e);
+    showSync('err','Solo locale — riprovo');
     clearTimeout(syncTimeout);
-    syncTimeout = setTimeout(syncToCloud, 20000);
+    syncTimeout=setTimeout(syncToCloud,20000);
   }finally{ isSyncing=false; }
 }
 
@@ -4746,73 +4732,68 @@ async function forceSave(){
 
 // ── LOAD ─────────────────────────────────────────────────────────────────
 async function loadData(){
-  // Step 1 — localStorage (istantaneo, mostra subito i dati precedenti)
-  let localTs = '';
+  // Step 1: localStorage (istantaneo)
+  let localTs='';
   try{
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw=localStorage.getItem(STORE_KEY);
     if(raw){
-      const d = JSON.parse(raw);
-      if(d.FAT)           FAT           = d.FAT;
-      if(d.CC)            CC            = d.CC;
-      if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA = d.ARTICOLI_EXTRA;
-      if(d.PRICE_ALERTS)  PRICE_ALERTS  = d.PRICE_ALERTS;
-      if(d.FAT_CLIENTI)   FAT_CLIENTI   = d.FAT_CLIENTI;
-      if(d.OVERDUE_ALERTS)OVERDUE_ALERTS = d.OVERDUE_ALERTS;
-      localTs = d._saved||'';
+      const d=JSON.parse(raw);
+      if(d.FAT)           FAT           =d.FAT;
+      if(d.CC)            CC            =d.CC;
+      if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
+      if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
+      if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
+      if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
+      localTs=d._saved||'';
     }
   }catch(e){}
 
-  // Step 2 — Firebase (aggiorna se il cloud è più recente)
-  splashMsg('Verifica cloud…', 50);
-  if(!_cloudOk()){
-    showSync('err','⚠ Configura GIST_ID e GIST_TOKEN — solo locale');
-    splashMsg('Modalità locale (configura Gist)', 100);
-    return !!localTs;
-  }
+  // Step 2: cloud
+  splashMsg('Verifica cloud…',50);
   try{
-    const d = await gistGET();
+    await npEnsure();
+    const d=await npGet();
     if(d){
-      const cloudTs = d._saved||'';
-      if(!localTs || (cloudTs && cloudTs > localTs)){
-        // Cloud più recente → usa il cloud
-        if(d.FAT)           FAT           = d.FAT;
-        if(d.CC)            CC            = d.CC;
-        if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA = d.ARTICOLI_EXTRA;
-        if(d.PRICE_ALERTS)  PRICE_ALERTS  = d.PRICE_ALERTS;
-        if(d.FAT_CLIENTI)   FAT_CLIENTI   = d.FAT_CLIENTI;
-        if(d.OVERDUE_ALERTS)OVERDUE_ALERTS = d.OVERDUE_ALERTS;
-        try{ localStorage.setItem(STORE_KEY, JSON.stringify({...d})); }catch(e){}
+      const cloudTs=d._saved||'';
+      if(!localTs||(cloudTs&&cloudTs>localTs)){
+        // Cloud più recente
+        if(d.FAT)           FAT           =d.FAT;
+        if(d.CC)            CC            =d.CC;
+        if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
+        if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
+        if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
+        if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
+        try{localStorage.setItem(STORE_KEY,JSON.stringify({...d}));}catch(e){}
         showSync('ok','Cloud caricato ✓');
-      } else if(localTs && localTs > cloudTs){
-        // Locale più recente → carica il locale sul cloud
-        showSync('ok','Locale aggiornato — upload…');
+      } else if(localTs&&(!cloudTs||localTs>cloudTs)){
+        // Locale più recente → upload
+        showSync('ok','Upload locale…');
         clearTimeout(syncTimeout);
-        syncTimeout = setTimeout(syncToCloud, 300);
+        syncTimeout=setTimeout(syncToCloud,300);
       } else {
         showSync('ok','Sincronizzato ✓');
       }
     } else {
-      // Firebase vuoto (primo avvio assoluto o dati cancellati)
       if(localTs){
-        showSync('ok','Caricamento locale — upload…');
+        showSync('ok','Caricamento locale…');
         clearTimeout(syncTimeout);
-        syncTimeout = setTimeout(syncToCloud, 300);
+        syncTimeout=setTimeout(syncToCloud,300);
       } else {
         showSync('ok','Pronto');
       }
     }
-    splashMsg('Pronto!', 100);
+    splashMsg('Pronto!',100);
   }catch(e){
-    console.warn('Firebase load error:',e);
-    showSync('err', localTs ? 'Offline — dati locali' : 'Offline — nessun dato');
-    splashMsg(localTs ? 'Modalità offline' : 'Offline — nessun dato', 100);
+    console.warn('Sync error:',e);
+    showSync('err',localTs?'Offline — dati locali':'Offline');
+    splashMsg(localTs?'Modalità offline':'Nessun dato',100);
   }
 }
 
 // ── DELETE ALL ────────────────────────────────────────────────────────────
 async function _doDeleteAll(){
   try{
-    await gistPUT({FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:new Date().toISOString()});
+    if(NPOINT_ID) await npSet({FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:new Date().toISOString()});
   }catch(e){ console.warn(e); }
   localStorage.removeItem(STORE_KEY);
   location.reload();
@@ -4898,10 +4879,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 // INIT — avvio diretto, nessun login
 // ══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async ()=>{
-  loadGistConfig();
   splashMsg('Caricamento…', 20);
 
-  // Carica dati: localStorage subito + Firebase in background
+  // Carica dati: localStorage subito + Gist in background
   await loadData();
 
   // Aggiorna stati clienti
@@ -5726,86 +5706,8 @@ td{padding:7px 10px;vertical-align:middle}
 // (exportCliPdf/Csv/Xlsx non modificano dati, non serve wrapping)
 
 
-// ── GIST SETUP MODAL ─────────────────────────────────────────────────────
-function openGistSetup(){
-  document.getElementById('setup-gist-id').value    = GIST_ID    || '';
-  document.getElementById('setup-gist-token').value = GIST_TOKEN || '';
-  openM('m-gist-setup');
-}
-
-async function applyGistSetup(){
-  const id    = document.getElementById('setup-gist-id').value.trim();
-  const token = document.getElementById('setup-gist-token').value.trim();
-  if(!id || !token){ toast('Inserisci sia ID che token', false); return; }
-  // Modifica le variabili in runtime
-  // (non modifica il file — per permanenza occorre editare il codice)
-  window.GIST_ID    = id;
-  window.GIST_TOKEN = token;
-  // Salva in localStorage per persistenza nella sessione corrente
-  localStorage.setItem('gf_gist_id',    id);
-  localStorage.setItem('gf_gist_token', token);
-  closeM('m-gist-setup');
-  toast('Configurazione applicata — provo il sync…');
-  document.getElementById('gist-cfg-warn').style.display='none';
-  // Testa subito
-  await forceSave();
-}
-
-// Carica config da localStorage se presente (override del codice)
-function loadGistConfig(){
-  const id    = localStorage.getItem('gf_gist_id');
-  const token = localStorage.getItem('gf_gist_token');
-  if(id)    window.GIST_ID    = id;
-  if(token) window.GIST_TOKEN = token;
-  // Mostra warning se non configurato
-  const warn = document.getElementById('gist-cfg-warn');
-  if(warn) warn.style.display = (!window.GIST_ID || !window.GIST_TOKEN) ? '' : 'none';
-}
-
 
 </script>
 
-<!-- MODAL SETUP GIST -->
-<div id="m-gist-setup" class="mover hidden">
-  <div class="modal" style="width:560px">
-    <div class="mtitle">☁ Configurazione sync cloud</div>
-    <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">
-      Per sincronizzare i dati su tutti i dispositivi, configura un GitHub Gist come backend.
-      È gratuito e richiede 3 minuti.
-    </div>
-    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border:1px solid var(--br)">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--tx3);letter-spacing:.5px;margin-bottom:10px">PASSO 1 — Crea il Gist</div>
-      <div style="font-size:12px;color:var(--tx2);line-height:1.7">
-        1. Vai su <a href="https://gist.github.com" target="_blank" style="color:var(--ac)">gist.github.com</a><br>
-        2. Nome file: <code style="background:var(--bg4);padding:1px 6px;border-radius:4px">gestfatture_data.json</code><br>
-        3. Contenuto: <code style="background:var(--bg4);padding:1px 6px;border-radius:4px">{}</code><br>
-        4. Clicca <strong>Create secret gist</strong><br>
-        5. Copia l'ID dall'URL: <code style="background:var(--bg4);padding:1px 6px;border-radius:4px">gist.github.com/user/<strong>QUESTO_È_L_ID</strong></code>
-      </div>
-    </div>
-    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border:1px solid var(--br)">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--tx3);letter-spacing:.5px;margin-bottom:10px">PASSO 2 — Crea il token</div>
-      <div style="font-size:12px;color:var(--tx2);line-height:1.7">
-        1. Vai su <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--ac)">github.com/settings/tokens</a><br>
-        2. <strong>Generate new token (classic)</strong><br>
-        3. Spunta solo <strong>gist</strong><br>
-        4. Clicca Generate → copia il token
-      </div>
-    </div>
-    <div class="fg"><label class="fl2">GIST ID (dall'URL)</label>
-      <input type="text" id="setup-gist-id" style="width:100%;font-family:monospace" placeholder="abc123def456...">
-    </div>
-    <div class="fg"><label class="fl2">TOKEN GITHUB</label>
-      <input type="password" id="setup-gist-token" style="width:100%;font-family:monospace" placeholder="ghp_...">
-    </div>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:14px">
-      ⚠ Il token viene salvato nel codice HTML. Tieni il file privato o usa un token con solo scope "gist".
-    </div>
-    <div class="mact">
-      <button class="btn" onclick="closeM('m-gist-setup')">Chiudi</button>
-      <button class="btn btn-p" onclick="applyGistSetup()">✓ Salva configurazione</button>
-    </div>
-  </div>
-</div>
 
 </html>
