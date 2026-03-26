@@ -417,6 +417,7 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
     </div>
     <div class="tbar-r">
       <span style="font-size:11px;color:var(--tx3)" id="dd-date"></span>
+      <span id="gist-cfg-warn" style="display:none;font-size:11px;background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);border-radius:6px;padding:3px 9px;cursor:pointer" onclick="openGistSetup()" title="Clicca per le istruzioni di configurazione">⚠ Cloud non configurato — clicca qui</span>
       <label class="btn btn-sm" for="pdf-d" style="cursor:pointer">📄 PDF</label>
       <input type="file" id="pdf-d" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="doPDF(this.files)">
       <button class="btn btn-sm" onclick="openCameraModal()">📷 Foto</button>
@@ -4605,16 +4606,32 @@ function copySollecito(){
 // ══════════════════════════════════════════
 
 // ── CONFIGURAZIONE ────────────────────────────────────────────────────────
-// Firebase Realtime Database — piano gratuito Spark
-// Regole impostate su lettura/scrittura pubblica (nessun auth necessario)
-const FB_DB   = 'https://gestionefatture-c74aa-default-rtdb.europe-west1.firebasedatabase.app/
-';
-const FB_NODE = '/gf.json';   // unico nodo root
-const STORE_KEY = 'gestfatture_v7_local';
+// GitHub Gist come backend — funziona da qualsiasi origine, incluso GitHub Pages.
+// Nessun problema CORS. Gratuito. Nessuna configurazione server.
+//
+// ISTRUZIONI SETUP (una volta sola):
+// 1. Vai su https://gist.github.com → crea un nuovo Gist
+//    - Nome file: gestfatture_data.json
+//    - Contenuto: {}
+//    - Visibilità: Secret (o Public)
+//    - Clicca "Create secret gist"
+// 2. Copia l'ID del Gist dall'URL (la parte dopo /username/)
+//    Es: https://gist.github.com/username/ABC123DEF → ID = ABC123DEF
+// 3. Vai su https://github.com/settings/tokens → Generate new token (classic)
+//    - Nome: GestFatture
+//    - Scope: spunta solo "gist"
+//    - Clicca Generate token → copia il token
+// 4. Incolla ID e token qui sotto:
+// ─────────────────────────────────────────────────────────────────────────
+const GIST_ID    = '';   // ← incolla qui l'ID del Gist
+const GIST_TOKEN = '';   // ← incolla qui il token GitHub
+const GIST_FILE  = 'gestfatture_data.json';
+const STORE_KEY  = 'gestfatture_v7_local';
 // ─────────────────────────────────────────────────────────────────────────
 
 let syncTimeout = null;
 let isSyncing   = false;
+let _cloudConfigOk = false;  // true se GIST_ID e GIST_TOKEN sono configurati
 
 // ── STATUS ────────────────────────────────────────────────────────────────
 function showSync(state, msg){
@@ -4650,20 +4667,42 @@ function doLogin(){}
 function doSignup(){}
 function doLogout(){ location.reload(); }
 
-// ── FIREBASE API ──────────────────────────────────────────────────────────
-async function fbGET(){
-  const r = await fetch(FB_DB + FB_NODE);
-  if(!r.ok) throw new Error('Firebase GET '+r.status);
-  return r.json();   // null se il nodo non esiste ancora
+// ── GITHUB GIST API ──────────────────────────────────────────────────────
+function _cloudOk(){
+  _cloudConfigOk = !!(GIST_ID && GIST_TOKEN);
+  return _cloudConfigOk;
 }
 
-async function fbPUT(data){
-  const r = await fetch(FB_DB + FB_NODE, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
+async function gistGET(){
+  if(!_cloudOk()) throw new Error('Gist non configurato');
+  const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+    headers: {
+      'Authorization': `token ${GIST_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json'
+    }
   });
-  if(!r.ok) throw new Error('Firebase PUT '+r.status);
+  if(!r.ok) throw new Error('Gist GET '+r.status);
+  const gist = await r.json();
+  const content = gist.files?.[GIST_FILE]?.content || 'null';
+  return JSON.parse(content);
+}
+
+async function gistPUT(data){
+  if(!_cloudOk()) throw new Error('Gist non configurato');
+  const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `token ${GIST_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      files: {
+        [GIST_FILE]: { content: JSON.stringify(data) }
+      }
+    })
+  });
+  if(!r.ok) throw new Error('Gist PATCH '+r.status);
   return r.json();
 }
 
@@ -4680,11 +4719,12 @@ function saveData(){
 
 async function syncToCloud(){
   if(isSyncing) return;
+  if(!_cloudOk()){ showSync('err','Configura GIST_ID e GIST_TOKEN nel file HTML'); return; }
   isSyncing = true;
   showSync('syncing','Salvataggio cloud…');
   try{
     const ts = new Date().toISOString();
-    await fbPUT({FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts});
+    await gistPUT({FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts});
     // Aggiorna _saved anche nel locale
     try{
       const raw = localStorage.getItem(STORE_KEY);
@@ -4724,8 +4764,13 @@ async function loadData(){
 
   // Step 2 — Firebase (aggiorna se il cloud è più recente)
   splashMsg('Verifica cloud…', 50);
+  if(!_cloudOk()){
+    showSync('err','⚠ Configura GIST_ID e GIST_TOKEN — solo locale');
+    splashMsg('Modalità locale (configura Gist)', 100);
+    return !!localTs;
+  }
   try{
-    const d = await fbGET();
+    const d = await gistGET();
     if(d){
       const cloudTs = d._saved||'';
       if(!localTs || (cloudTs && cloudTs > localTs)){
@@ -4767,7 +4812,7 @@ async function loadData(){
 // ── DELETE ALL ────────────────────────────────────────────────────────────
 async function _doDeleteAll(){
   try{
-    await fbPUT({FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:new Date().toISOString()});
+    await gistPUT({FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:new Date().toISOString()});
   }catch(e){ console.warn(e); }
   localStorage.removeItem(STORE_KEY);
   location.reload();
@@ -4853,6 +4898,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 // INIT — avvio diretto, nessun login
 // ══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async ()=>{
+  loadGistConfig();
   splashMsg('Caricamento…', 20);
 
   // Carica dati: localStorage subito + Firebase in background
@@ -5680,5 +5726,86 @@ td{padding:7px 10px;vertical-align:middle}
 // (exportCliPdf/Csv/Xlsx non modificano dati, non serve wrapping)
 
 
+// ── GIST SETUP MODAL ─────────────────────────────────────────────────────
+function openGistSetup(){
+  document.getElementById('setup-gist-id').value    = GIST_ID    || '';
+  document.getElementById('setup-gist-token').value = GIST_TOKEN || '';
+  openM('m-gist-setup');
+}
+
+async function applyGistSetup(){
+  const id    = document.getElementById('setup-gist-id').value.trim();
+  const token = document.getElementById('setup-gist-token').value.trim();
+  if(!id || !token){ toast('Inserisci sia ID che token', false); return; }
+  // Modifica le variabili in runtime
+  // (non modifica il file — per permanenza occorre editare il codice)
+  window.GIST_ID    = id;
+  window.GIST_TOKEN = token;
+  // Salva in localStorage per persistenza nella sessione corrente
+  localStorage.setItem('gf_gist_id',    id);
+  localStorage.setItem('gf_gist_token', token);
+  closeM('m-gist-setup');
+  toast('Configurazione applicata — provo il sync…');
+  document.getElementById('gist-cfg-warn').style.display='none';
+  // Testa subito
+  await forceSave();
+}
+
+// Carica config da localStorage se presente (override del codice)
+function loadGistConfig(){
+  const id    = localStorage.getItem('gf_gist_id');
+  const token = localStorage.getItem('gf_gist_token');
+  if(id)    window.GIST_ID    = id;
+  if(token) window.GIST_TOKEN = token;
+  // Mostra warning se non configurato
+  const warn = document.getElementById('gist-cfg-warn');
+  if(warn) warn.style.display = (!window.GIST_ID || !window.GIST_TOKEN) ? '' : 'none';
+}
+
+
 </script>
+
+<!-- MODAL SETUP GIST -->
+<div id="m-gist-setup" class="mover hidden">
+  <div class="modal" style="width:560px">
+    <div class="mtitle">☁ Configurazione sync cloud</div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">
+      Per sincronizzare i dati su tutti i dispositivi, configura un GitHub Gist come backend.
+      È gratuito e richiede 3 minuti.
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border:1px solid var(--br)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--tx3);letter-spacing:.5px;margin-bottom:10px">PASSO 1 — Crea il Gist</div>
+      <div style="font-size:12px;color:var(--tx2);line-height:1.7">
+        1. Vai su <a href="https://gist.github.com" target="_blank" style="color:var(--ac)">gist.github.com</a><br>
+        2. Nome file: <code style="background:var(--bg4);padding:1px 6px;border-radius:4px">gestfatture_data.json</code><br>
+        3. Contenuto: <code style="background:var(--bg4);padding:1px 6px;border-radius:4px">{}</code><br>
+        4. Clicca <strong>Create secret gist</strong><br>
+        5. Copia l'ID dall'URL: <code style="background:var(--bg4);padding:1px 6px;border-radius:4px">gist.github.com/user/<strong>QUESTO_È_L_ID</strong></code>
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:14px;border:1px solid var(--br)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--tx3);letter-spacing:.5px;margin-bottom:10px">PASSO 2 — Crea il token</div>
+      <div style="font-size:12px;color:var(--tx2);line-height:1.7">
+        1. Vai su <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--ac)">github.com/settings/tokens</a><br>
+        2. <strong>Generate new token (classic)</strong><br>
+        3. Spunta solo <strong>gist</strong><br>
+        4. Clicca Generate → copia il token
+      </div>
+    </div>
+    <div class="fg"><label class="fl2">GIST ID (dall'URL)</label>
+      <input type="text" id="setup-gist-id" style="width:100%;font-family:monospace" placeholder="abc123def456...">
+    </div>
+    <div class="fg"><label class="fl2">TOKEN GITHUB</label>
+      <input type="password" id="setup-gist-token" style="width:100%;font-family:monospace" placeholder="ghp_...">
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:14px">
+      ⚠ Il token viene salvato nel codice HTML. Tieni il file privato o usa un token con solo scope "gist".
+    </div>
+    <div class="mact">
+      <button class="btn" onclick="closeM('m-gist-setup')">Chiudi</button>
+      <button class="btn btn-p" onclick="applyGistSetup()">✓ Salva configurazione</button>
+    </div>
+  </div>
+</div>
+
 </html>
