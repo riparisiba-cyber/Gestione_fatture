@@ -324,13 +324,62 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
   <span id="sync-msg">Sincronizzazione…</span>
 </div>
 
-<!-- SPLASH (sostituisce login) -->
-<div id="login-screen" style="display:flex;position:fixed;inset:0;background:var(--bg);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:14px">
-  <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#4f80f0,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:26px">📊</div>
-  <div style="font-size:22px;font-weight:800;letter-spacing:-.5px">GestFatture Pro</div>
-  <div style="font-size:13px;color:var(--tx3)" id="splash-msg">Connessione al cloud…</div>
-  <div style="width:200px;height:3px;background:var(--bg3);border-radius:3px;overflow:hidden">
-    <div id="splash-bar" style="height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--violet));border-radius:3px;transition:width .4s"></div>
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:flex">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">📊</div>
+      <div class="login-logo-text">GestFatture Pro</div>
+    </div>
+    <div class="login-subtitle">Gestionale fatture — accesso riservato</div>
+
+    <div class="login-tab">
+      <button class="login-tab-btn active" id="lt-login"  onclick="switchLoginTab('login')">Accedi</button>
+      <button class="login-tab-btn"        id="lt-signup" onclick="switchLoginTab('signup')">Registrati</button>
+    </div>
+
+    <!-- ACCEDI -->
+    <div id="lt-login-form">
+      <div class="fg">
+        <label class="fl2">NOME UTENTE</label>
+        <input type="text" id="li-user" style="width:100%" placeholder="es. mario.rossi" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('li-pwd').focus()">
+      </div>
+      <div class="fg">
+        <label class="fl2">PASSWORD</label>
+        <div style="position:relative">
+          <input type="password" id="li-pwd" style="width:100%;padding-right:38px" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+          <button onclick="togglePwd('li-pwd',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px">👁</button>
+        </div>
+      </div>
+      <div id="li-err" class="login-err"></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:6px;padding:11px" onclick="doLogin()" id="li-btn">Accedi</button>
+    </div>
+
+    <!-- REGISTRATI -->
+    <div id="lt-signup-form" class="hidden">
+      <div class="fg">
+        <label class="fl2">CODICE INVITO</label>
+        <input type="text" id="su-invite" style="width:100%;font-family:monospace;letter-spacing:2px;text-transform:uppercase" placeholder="XXXX-XXXX">
+      </div>
+      <div class="fg">
+        <label class="fl2">NOME UTENTE</label>
+        <input type="text" id="su-user" style="width:100%" placeholder="es. mario.rossi (solo lettere, punti, trattini)">
+      </div>
+      <div class="fg">
+        <label class="fl2">PASSWORD</label>
+        <div style="position:relative">
+          <input type="password" id="su-pwd" style="width:100%;padding-right:38px" placeholder="min. 6 caratteri" onkeydown="if(event.key==='Enter')doSignup()">
+          <button onclick="togglePwd('su-pwd',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px">👁</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl2">CONFERMA PASSWORD</label>
+        <input type="password" id="su-pwd2" style="width:100%" placeholder="••••••••" onkeydown="if(event.key==='Enter')doSignup()">
+      </div>
+      <div id="su-err" class="login-err"></div>
+      <div id="su-ok"  class="login-ok hidden"></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:6px;padding:11px" onclick="doSignup()" id="su-btn">Crea account</button>
+    </div>
   </div>
 </div>
 
@@ -394,12 +443,12 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
     <span class="nb" id="nb-al">0</span>
   </div>
   <div class="sb-foot">
+    <div id="sb-user" style="font-size:10px;color:var(--tx3);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
     <div><strong id="sb-tot">—</strong> tot. anno</div>
     <div style="margin-top:3px" id="sb-ap">— fatture aperte</div>
-    <div id="sb-sync-lbl" style="font-size:10px;color:var(--tx3);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">⟳ Connessione…</div>
-    <div style="display:flex;gap:5px;margin-top:8px">
-      <button class="btn btn-xs" onclick="forceSave()" style="flex:1;justify-content:center" title="Forza salvataggio cloud">☁ Sync</button>
-      <button class="btn btn-xs" onclick="confirmDeleteAll()" style="flex:1;justify-content:center;color:var(--red);border-color:rgba(248,113,113,.3)">🗑 Elimina</button>
+    <div style="display:flex;gap:5px;margin-top:10px">
+      <button class="btn btn-xs" onclick="confirmDeleteAll()" style="flex:1;justify-content:center;color:var(--red);border-color:rgba(248,113,113,.3)">🗑 Elimina tutto</button>
+      <button class="btn btn-xs" onclick="doLogout()" style="flex:1;justify-content:center">⎋ Esci</button>
     </div>
   </div>
 </nav>
@@ -4598,142 +4647,217 @@ function copySollecito(){
 }
 
 // ══════════════════════════════════════════
-// ══════════════════════════════════════════
-// STORAGE — GitHub Gist API
-// Funziona da GitHub Pages, file://, qualsiasi origine.
-// Nessun header custom → nessun problema CORS.
+// JSONBIN.IO AUTH + PER-USER DATA SYNC
 // ══════════════════════════════════════════
 
-// ── CONFIGURAZIONE ────────────────────────────────────────────────────────
-// npoint.io — API JSON pubblica, CORS aperto, nessun token necessario.
-// Funziona da GitHub Pages, file://, qualsiasi origine.
-// L'endpoint viene creato automaticamente al primo avvio.
-// ─────────────────────────────────────────────────────────────────────────
-const STORE_KEY   = 'gestfatture_v7_local';
-const NPOINT_KEY  = 'gestfatture_npoint_id';  // localStorage key per l'ID endpoint
-let   NPOINT_ID   = localStorage.getItem('gestfatture_npoint_id') || '';
+// ─────────────────────────────────────────
+// ▼▼▼  CONFIGURA QUI  ▼▼▼
+// ─────────────────────────────────────────
+const JSONBIN_API_KEY  = '$2a$10$mbde8wsbtIFje.FpNonlXOCKyf76GX2TGd7nOyj09DPBkaSVSuaAC';
+const JSONBIN_USERS_ID = '69c076c4c3097a1dd54d0bfd';  // Bin condiviso per l'elenco utenti
+const INVITE_CODE      = 'SIBA-2008';               // Codice invito — cambialo!
+// ─────────────────────────────────────────
 
-let syncTimeout = null;
-let isSyncing   = false;
+const STORE_KEY = 'gestfatture_v4_cache';
+const SESSION_KEY = 'gestfatture_session';
 
-// ── STATUS ────────────────────────────────────────────────────────────────
+let currentUser  = null;  // { username, binId, displayName }
+let syncTimeout  = null;
+let isSyncing    = false;
+
+// ── UTILS ───────────────────────────────────────────────────────────────
 function showSync(state, msg){
-  const el  = document.getElementById('sync-indicator');
-  const ico = document.getElementById('sync-ico');
-  const lbl = document.getElementById('sb-sync-lbl');
-  const icons = {ok:'✓', syncing:'⟳', err:'⚠'};
-  if(el){
-    el.className='show '+state;
-    if(ico) ico.textContent = icons[state]||'⟳';
-    const msgEl=document.getElementById('sync-msg');
-    if(msgEl) msgEl.textContent=msg;
-    clearTimeout(el._t);
-    if(state!=='syncing') el._t=setTimeout(()=>el.classList.remove('show'),3000);
-  }
-  if(lbl){
-    lbl.textContent=(icons[state]||'')+' '+msg;
-    lbl.style.color=state==='ok'?'var(--green)':state==='err'?'var(--red)':'var(--amber)';
-  }
+  const el=document.getElementById('sync-indicator');
+  const ico=document.getElementById('sync-ico');
+  const msgEl=document.getElementById('sync-msg');
+  if(!el) return;
+  el.className='show '+state;
+  if(ico) ico.textContent=state==='syncing'?'⟳':state==='ok'?'✓':'⚠';
+  if(msgEl) msgEl.textContent=msg;
+  clearTimeout(el._t);
+  if(state!=='syncing') el._t=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
-function splashMsg(msg, pct){
-  const m=document.getElementById('splash-msg');
-  const b=document.getElementById('splash-bar');
-  if(m) m.textContent=msg;
-  if(b) b.style.width=(pct||0)+'%';
+function togglePwd(id,btn){
+  const inp=document.getElementById(id); if(!inp) return;
+  inp.type=inp.type==='password'?'text':'password';
+  btn.textContent=inp.type==='password'?'👁':'🙈';
 }
 
-// Stub compatibilità
-function togglePwd(id,btn){ const i=document.getElementById(id);if(!i)return;i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁':'🙈'; }
-function switchLoginTab(){}
-function doLogin(){}
-function doSignup(){}
-function doLogout(){ location.reload(); }
-
-// ── NPOINT.IO API ─────────────────────────────────────────────────────────
-// Crea un nuovo endpoint con i dati iniziali
-async function npCreate(data){
-  const r = await fetch('https://api.npoint.io/create', {
-    method:  'POST',
-    headers: {'Content-Type':'application/json'},
-    body:    JSON.stringify(data)
+function switchLoginTab(tab){
+  ['login','signup'].forEach(t=>{
+    document.getElementById('lt-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('lt-'+t+'-form')?.classList.toggle('hidden',t!==tab);
   });
-  if(!r.ok) throw new Error('npoint create '+r.status);
-  const j = await r.json();
-  return j.id;   // es. "c82f5e9b3d7a1f4e8c6d"
 }
 
-// Legge i dati dall'endpoint
-async function npGet(){
-  if(!NPOINT_ID) return null;
-  const r = await fetch(`https://api.npoint.io/${NPOINT_ID}`);
-  if(r.status===404) return null;
-  if(!r.ok) throw new Error('npoint get '+r.status);
-  return r.json();
+// ── SIMPLE HASH (sha-256 via SubtleCrypto) ──────────────────────────────
+async function hashPwd(pwd){
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(pwd));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-// Scrive i dati nell'endpoint
-async function npSet(data){
-  if(!NPOINT_ID) throw new Error('npoint ID mancante');
-  const r = await fetch(`https://api.npoint.io/${NPOINT_ID}`, {
-    method:  'PUT',
-    headers: {'Content-Type':'application/json'},
-    body:    JSON.stringify(data)
+// ── JSONBIN API ─────────────────────────────────────────────────────────
+async function jbGet(binId){
+  const res=await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{
+    headers:{'X-Master-Key':JSONBIN_API_KEY,'X-Bin-Meta':false}
   });
-  if(!r.ok) throw new Error('npoint put '+r.status);
-  return r.json();
+  if(!res.ok) throw new Error('JSONBin GET failed: '+res.status);
+  return res.json();
 }
 
-// Inizializza: recupera o crea l'endpoint
-async function npEnsure(){
-  if(NPOINT_ID) return;
-  const empty={FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:''};
-  NPOINT_ID = await npCreate(empty);
-  localStorage.setItem(NPOINT_KEY, NPOINT_ID);
-  showSync('ok','Endpoint cloud creato ✓');
+async function jbSet(binId, data){
+  const res=await fetch(`https://api.jsonbin.io/v3/b/${binId}`,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_API_KEY},
+    body:JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error('JSONBin PUT failed: '+res.status);
+  return res.json();
 }
 
-// ── SAVE ─────────────────────────────────────────────────────────────────
+async function jbCreate(name, data){
+  const res=await fetch('https://api.jsonbin.io/v3/b',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_API_KEY,'X-Bin-Name':name,'X-Bin-Private':'true'},
+    body:JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error('JSONBin CREATE failed: '+res.status);
+  const d=await res.json();
+  return d.metadata.id;
+}
+
+// ── AUTH ─────────────────────────────────────────────────────────────────
+async function doLogin(){
+  const username = document.getElementById('li-user')?.value?.trim().toLowerCase();
+  const pwd      = document.getElementById('li-pwd')?.value;
+  const errEl    = document.getElementById('li-err');
+  const btn      = document.getElementById('li-btn');
+  if(!username||!pwd){ errEl.textContent='⚠ Inserisci nome utente e password'; return; }
+  errEl.textContent=''; btn.disabled=true; btn.textContent='Accesso…';
+  try{
+    const resp  = await jbGet(JSONBIN_USERS_ID);
+    const users = resp.users || [];
+    const user  = users.find(u=>u.username===username);
+    if(!user){ errEl.textContent='⚠ Utente non trovato'; return; }
+    const hash = await hashPwd(pwd);
+    if(hash !== user.pwdHash){ errEl.textContent='⚠ Password non corretta'; return; }
+    currentUser = {username:user.username, binId:user.binId, displayName:user.displayName||user.username};
+    localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+    await afterLogin();
+  }catch(e){
+    errEl.textContent='⚠ Errore: '+e.message.slice(0,60);
+  }finally{ btn.disabled=false; btn.textContent='Accedi'; }
+}
+
+async function doSignup(){
+  const invite  = document.getElementById('su-invite')?.value?.trim().toUpperCase();
+  const username= document.getElementById('su-user')?.value?.trim().toLowerCase();
+  const pwd     = document.getElementById('su-pwd')?.value;
+  const pwd2    = document.getElementById('su-pwd2')?.value;
+  const errEl   = document.getElementById('su-err');
+  const okEl    = document.getElementById('su-ok');
+  const btn     = document.getElementById('su-btn');
+
+  if(invite !== INVITE_CODE){ errEl.textContent='⚠ Codice invito non valido'; return; }
+  if(!username||username.length<3){ errEl.textContent='⚠ Nome utente minimo 3 caratteri'; return; }
+  if(!/^[a-z0-9._-]+$/.test(username)){ errEl.textContent='⚠ Solo lettere minuscole, numeri, punti e trattini'; return; }
+  if(!pwd||pwd.length<6){ errEl.textContent='⚠ Password minimo 6 caratteri'; return; }
+  if(pwd!==pwd2){ errEl.textContent='⚠ Le password non coincidono'; return; }
+  errEl.textContent=''; okEl.classList.add('hidden');
+  btn.disabled=true; btn.textContent='Registrazione…';
+  try{
+    // Load existing users
+    let users=[];
+    try{ const resp=await jbGet(JSONBIN_USERS_ID); users=resp.users||[]; }catch(e){}
+    if(users.find(u=>u.username===username)){ errEl.textContent='⚠ Nome utente già in uso'; return; }
+
+    // Create personal data bin for this user
+    const pwdHash=await hashPwd(pwd);
+    const dataBinId=await jbCreate('gestfatture-'+username,{
+      FAT:[], CC:[], ARTICOLI_EXTRA:[], PRICE_ALERTS:[], FAT_CLIENTI:[], OVERDUE_ALERTS:[]
+    });
+
+    // Add user to users list
+    users.push({username, pwdHash, binId:dataBinId, displayName:username, createdAt:new Date().toISOString()});
+    await jbSet(JSONBIN_USERS_ID, {users});
+
+    okEl.textContent='✓ Account creato! Ora puoi accedere.';
+    okEl.classList.remove('hidden');
+    // Switch to login
+    setTimeout(()=>{
+      switchLoginTab('login');
+      document.getElementById('li-user').value=username;
+    },1500);
+  }catch(e){
+    errEl.textContent='⚠ Errore: '+e.message.slice(0,60);
+  }finally{ btn.disabled=false; btn.textContent='Crea account'; }
+}
+
+async function doLogout(){
+  currentUser=null;
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('sb-user').textContent='';
+  ['li-user','li-pwd','su-invite','su-user','su-pwd','su-pwd2'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  ['li-err','su-err'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=''; });
+}
+
+async function afterLogin(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('sb-user').textContent='👤 '+currentUser.displayName;
+  await loadData();
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+  popSels(); rDash(); updBadge(); checkOverdueAlerts();
+}
+
+// ── SAVE / SYNC ──────────────────────────────────────────────────────────
 function saveData(){
   const ts = new Date().toISOString();
   const payload={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts};
-  // 1. localStorage istantaneo
+  // 1. Salva SEMPRE in localStorage (istantaneo, offline-safe)
   try{ localStorage.setItem(STORE_KEY,JSON.stringify(payload)); }catch(e){}
-  // 2. cloud con debounce
+  // 2. Schedula sync cloud con debounce
   clearTimeout(syncTimeout);
   syncTimeout=setTimeout(syncToCloud,1500);
 }
 
 async function syncToCloud(){
+  // Funziona anche senza currentUser — usa sempre il binId se loggato
   if(isSyncing) return;
+  if(!currentUser) return;  // loggato ma non ha binId → skip silenzioso
   isSyncing=true;
   showSync('syncing','Salvataggio…');
   try{
-    await npEnsure();
-    const ts=new Date().toISOString();
-    await npSet({FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts});
+    const ts = new Date().toISOString();
+    await jbSet(currentUser.binId,{
+      FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,
+      _saved:ts
+    });
+    // Aggiorna il timestamp nel locale per confronto futuro
     try{
       const raw=localStorage.getItem(STORE_KEY);
-      if(raw){const p=JSON.parse(raw);p._saved=ts;localStorage.setItem(STORE_KEY,JSON.stringify(p));}
+      if(raw){ const p=JSON.parse(raw); p._saved=ts; localStorage.setItem(STORE_KEY,JSON.stringify(p)); }
     }catch(e){}
-    showSync('ok','Sincronizzato ✓');
+    showSync('ok','Salvato ✓');
   }catch(e){
     console.warn('Sync error:',e);
-    showSync('err','Solo locale — riprovo');
+    showSync('err','Solo locale — riprovo tra 15s');
+    // Riprova automaticamente tra 15 secondi
     clearTimeout(syncTimeout);
-    syncTimeout=setTimeout(syncToCloud,20000);
+    syncTimeout=setTimeout(syncToCloud,15000);
   }finally{ isSyncing=false; }
-}
-
-async function forceSave(){
-  clearTimeout(syncTimeout);
-  await syncToCloud();
 }
 
 // ── LOAD ─────────────────────────────────────────────────────────────────
 async function loadData(){
-  // Step 1: localStorage (istantaneo)
-  let localTs='';
+  // Step 1: carica SEMPRE localStorage prima (istantaneo)
+  let localSaved='';
   try{
     const raw=localStorage.getItem(STORE_KEY);
     if(raw){
@@ -4744,65 +4868,58 @@ async function loadData(){
       if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
       if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
       if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
-      localTs=d._saved||'';
+      localSaved=d._saved||'';
     }
   }catch(e){}
 
-  // Step 2: cloud
-  splashMsg('Verifica cloud…',50);
-  try{
-    await npEnsure();
-    const d=await npGet();
-    if(d){
-      const cloudTs=d._saved||'';
-      if(!localTs||(cloudTs&&cloudTs>localTs)){
-        // Cloud più recente
+  // Step 2: scarica dal cloud e usa SOLO se più recente del locale
+  if(currentUser){
+    try{
+      showSync('syncing','Verifica cloud…');
+      const d=await jbGet(currentUser.binId);
+      const cloudSaved=d._saved||'';
+      // Usa il cloud solo se ha un _saved più recente del locale
+      if(!localSaved||(cloudSaved&&cloudSaved>localSaved)){
         if(d.FAT)           FAT           =d.FAT;
         if(d.CC)            CC            =d.CC;
         if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
         if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
         if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
         if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
-        try{localStorage.setItem(STORE_KEY,JSON.stringify({...d}));}catch(e){}
+        // Aggiorna locale col cloud più recente
+        const p={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:cloudSaved};
+        try{ localStorage.setItem(STORE_KEY,JSON.stringify(p)); }catch(e){}
         showSync('ok','Cloud caricato ✓');
-      } else if(localTs&&(!cloudTs||localTs>cloudTs)){
-        // Locale più recente → upload
-        showSync('ok','Upload locale…');
+      } else {
+        // Locale più recente del cloud → carica il locale sul cloud subito
+        showSync('ok','Dati locali più recenti — upload…');
         clearTimeout(syncTimeout);
         syncTimeout=setTimeout(syncToCloud,300);
-      } else {
-        showSync('ok','Sincronizzato ✓');
       }
-    } else {
-      if(localTs){
-        showSync('ok','Caricamento locale…');
-        clearTimeout(syncTimeout);
-        syncTimeout=setTimeout(syncToCloud,300);
-      } else {
-        showSync('ok','Pronto');
-      }
+      return true;
+    }catch(e){
+      console.warn('Cloud load failed, using local cache:',e);
+      showSync('err','Cloud non raggiungibile — uso cache locale');
     }
-    splashMsg('Pronto!',100);
-  }catch(e){
-    console.warn('Sync error:',e);
-    showSync('err',localTs?'Offline — dati locali':'Offline');
-    splashMsg(localTs?'Modalità offline':'Nessun dato',100);
   }
+  return !!localSaved;
 }
 
 // ── DELETE ALL ────────────────────────────────────────────────────────────
 async function _doDeleteAll(){
-  try{
-    if(NPOINT_ID) await npSet({FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:new Date().toISOString()});
-  }catch(e){ console.warn(e); }
+  if(currentUser){
+    try{
+      await jbSet(currentUser.binId,{FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:new Date().toISOString()});
+    }catch(e){ console.warn('Cloud delete failed:',e); }
+  }
   localStorage.removeItem(STORE_KEY);
   location.reload();
 }
 
 function confirmDeleteAll(){
   doubleConfirmDelete(
-    'Eliminare <u>tutti i dati</u>?',
-    'Fatture, clienti, articoli verranno eliminati da tutti i dispositivi.',
+    'Eliminare <u>tutti i tuoi</u> dati?',
+    'Fatture, clienti, articoli e avvisi verranno eliminati dal tuo account.',
     _doDeleteAll
   );
 }
@@ -4876,25 +4993,26 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 // ══════════════════════════════════════════
-// INIT — avvio diretto, nessun login
+// INIT
 // ══════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', async ()=>{
-  splashMsg('Caricamento…', 20);
+document.addEventListener('DOMContentLoaded',async ()=>{
+  // Auto-restore session from localStorage
+  const saved=localStorage.getItem(SESSION_KEY);
+  if(saved){
+    try{
+      currentUser=JSON.parse(saved);
+      await afterLogin();
+    }catch(e){
+      localStorage.removeItem(SESSION_KEY);
+      document.getElementById('app').style.display='none';
+      document.getElementById('login-screen').style.display='flex';
+    }
+  } else {
+    document.getElementById('app').style.display='none';
+    document.getElementById('login-screen').style.display='flex';
+  }
 
-  // Carica dati: localStorage subito + Gist in background
-  await loadData();
-
-  // Aggiorna stati clienti
-  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
-
-  // Mostra app
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
-
-  // Inizializza UI
-  popSels(); rDash(); updBadge(); checkOverdueAlerts();
-
-  // Auto-save wrapper
+  // Auto-save dopo ogni azione che modifica dati
   const toWrap = [
     'saveMFat','saveF','delF','saveMCC',
     'confirmXmlImport','saveMArt','saveArtCC','delArtExtra',
@@ -5706,8 +5824,5 @@ td{padding:7px 10px;vertical-align:middle}
 // (exportCliPdf/Csv/Xlsx non modificano dati, non serve wrapping)
 
 
-
 </script>
-
-
 </html>
