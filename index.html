@@ -424,6 +424,10 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
     Estratto Conto
   </div>
+  <div class="ni" data-p="dashclienti" onclick="nav('dashclienti')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Dashboard Clienti
+  </div>
   <div class="sb-sec">Analisi</div>
   <div class="ni" data-p="centricosto" onclick="nav('centricosto')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
@@ -665,6 +669,9 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
       <div class="swrap"><span class="sico">🔍</span><input type="text" id="sc-q" placeholder="Cerca…" style="width:150px" oninput="rCli()"></div>
       <label class="btn btn-sm" for="xml-cli" style="cursor:pointer">↑ XML</label>
       <input type="file" id="xml-cli" accept=".xml" multiple onchange="doXMLCli(this.files)">
+      <button class="btn btn-sm" onclick="exportCliCsv()">📊 CSV</button>
+      <button class="btn btn-sm" onclick="exportCliXlsx()">📗 XLSX</button>
+      <button class="btn btn-sm" onclick="exportCliPdf()">📄 PDF</button>
       <button class="btn btn-p btn-sm" onclick="openBatch('cliente')">📦 Import Massivo</button>
       <button class="btn btn-sm" onclick="openMCli()">+ Nuova</button>
     </div>
@@ -732,6 +739,48 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
+
+<!-- DASHBOARD CLIENTI -->
+<div id="page-dashclienti" class="page hidden">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="sbToggle()">☰</button>
+      <div class="ptitle">👥 Dashboard Clienti</div>
+    </div>
+    <div class="tbar-r">
+      <button class="btn btn-sm" onclick="exportCliCsv()">📊 Esporta CSV</button>
+      <button class="btn btn-p btn-sm" onclick="exportCliPdf()">📄 Esporta PDF</button>
+      <button class="btn btn-sm" onclick="exportCliXlsx()">📗 Esporta XLSX</button>
+    </div>
+  </div>
+  <div class="pscroll"><div class="pcont">
+    <!-- KPI -->
+    <div class="kgrid" id="dc-kpi" style="margin-bottom:18px"></div>
+    <!-- Grafici -->
+    <div class="g2" style="margin-bottom:14px">
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Fatturato mensile clienti</div>
+        <div id="dc-ch-monthly" style="height:200px"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Stato incassi</div>
+        <div id="dc-ch-donut" style="height:200px;display:flex;align-items:center;gap:14px"></div>
+      </div>
+    </div>
+    <!-- Griglia clienti -->
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--tx2)">🏢 Clienti</div>
+    <div id="dc-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:20px" class="fgrid"></div>
+    <!-- Scadenze clienti -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:13px;font-weight:600">📅 Scadenze clienti aperte</div>
+        <button class="btn btn-xs" onclick="exportCliCsv()">⬇ Esporta</button>
+      </div>
+      <div id="dc-scad-table"></div>
+    </div>
+  </div></div>
+</div>
+<!-- /DASHBOARD CLIENTI -->
 
 <!-- ESTRATTO CONTO / RICONCILIAZIONE BANCARIA -->
 <div id="page-banca" class="page hidden">
@@ -1540,7 +1589,7 @@ function nav(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
   document.querySelectorAll('.ni').forEach(x=>x.classList.toggle('active',x.dataset.p===p));
   document.getElementById('page-'+p).classList.remove('hidden');
-  const fn={dashboard:rDash,fatture:rFat,articoli:rArt,fornitori:rForn,centricosto:rCC,report:rReport,clienti:rCli,banca:()=>{}};
+  const fn={dashboard:rDash,fatture:rFat,articoli:rArt,fornitori:rForn,centricosto:rCC,report:rReport,clienti:rCli,banca:()=>{},dashclienti:rDashClienti};
   if(fn[p]) fn[p]();
 }
 
@@ -5048,61 +5097,51 @@ function bancaParseXlsx(file){
 }
 
 // ── PDF parser ──────────────────────────────────────────────────────────────
-function bancaParsePdf(file){
-  return new Promise((res,rej)=>{
-    const reader = new FileReader();
-    reader.onload = async e => {
-      try {
-        // Use Anthropic API to extract movements from PDF
-        const base64 = arrayBufferToBase64(e.target.result);
-        const response = await fetch('https://api.anthropic.com/v1/messages',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            model:'claude-sonnet-4-20250514',
-            max_tokens:4000,
-            messages:[{
-              role:'user',
-              content:[
-                {type:'document', source:{type:'base64', media_type:'application/pdf', data:base64}},
-                {type:'text', text:`Analizza questo estratto conto bancario ed estrai TUTTI i movimenti.
-Rispondi SOLO con un JSON array, senza markdown, nel formato esatto:
+async function bancaParsePdf(file){
+  toast('📄 Lettura PDF in corso…', true);
+  // Usa pdf.js per renderizzare le pagine come immagini
+  const images = await pdfToImages(file, 2.0);
+  // Prova prima estrazione testo (PDF digitale)
+  let rawText = '';
+  try { rawText = await extractPdfText(file); } catch(e){}
+  
+  const response = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:4000,
+      messages:[{
+        role:'user',
+        content:[
+          ...images.map(b64=>({type:'image', source:{type:'base64', media_type:'image/jpeg', data:b64}})),
+          {type:'text', text:`Questo è un estratto conto bancario. Estrai TUTTI i movimenti visibili.
+Rispondi SOLO con un JSON array puro (no markdown), formato:
 [{"dt":"YYYY-MM-DD","desc":"descrizione movimento","dare":0.00,"avere":0.00,"saldo":0.00}]
-- dt: data in formato YYYY-MM-DD
-- desc: descrizione/causale del movimento (testo completo)
-- dare: importo in uscita (positivo, 0 se assente)
-- avere: importo in entrata (positivo, 0 se assente)  
-- saldo: saldo dopo il movimento (0 se non disponibile)
-Includi TUTTI i movimenti visibili. Solo JSON, nessun testo aggiuntivo.`}
-              ]
-            }]
-          })
-        });
-        const data = await response.json();
-        const txt  = (data.content||[]).map(b=>b.text||'').join('');
-        const clean= txt.replace(/```json|```/g,'').trim();
-        const arr  = JSON.parse(clean);
-        BANCA_MOVIMENTI = arr.map(m=>({
-          dt:   m.dt||'',
-          desc: m.desc||'',
-          dare: parseFloat(m.dare)||0,
-          avere:parseFloat(m.avere)||0,
-          saldo:parseFloat(m.saldo)||null,
-          raw:  JSON.stringify(m),
-          abbinato:false
-        })).filter(m=>m.dt&&(m.dare||m.avere));
-        res();
-      } catch(err){ rej(err); }
-    };
-    reader.onerror = () => rej(new Error('Errore lettura PDF'));
-    reader.readAsArrayBuffer(file);
+- dt: data in YYYY-MM-DD
+- desc: descrizione/causale completa
+- dare: importo uscita (positivo, 0 se assente)
+- avere: importo entrata (positivo, 0 se assente)
+- saldo: saldo dopo il movimento (0 se non visibile)
+Solo JSON array, nessun testo aggiuntivo.${rawText?'\n\nTesto estratto: '+rawText.slice(0,2000):''}`}
+        ]
+      }]
+    })
   });
-}
-
-function arrayBufferToBase64(buf){
-  let bin=''; const bytes=new Uint8Array(buf);
-  for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
-  return btoa(bin);
+  const data = await response.json();
+  if(data.error) throw new Error(data.error.message||'API error');
+  const txt  = (data.content||[]).map(b=>b.text||'').join('');
+  const clean= txt.replace(/```json|```/g,'').trim();
+  const arr  = JSON.parse(clean);
+  BANCA_MOVIMENTI = arr.map(m=>({
+    dt:   m.dt||'',
+    desc: m.desc||'',
+    dare: parseFloat(m.dare)||0,
+    avere:parseFloat(m.avere)||0,
+    saldo:parseFloat(m.saldo)||null,
+    raw:  JSON.stringify(m),
+    abbinato:false
+  })).filter(m=>m.dt&&(m.dare||m.avere));
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────
@@ -5472,9 +5511,257 @@ function bancaReset(){
   ['banca-file-pdf','banca-file-xls'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
 
-// Aggiungi 'banca' al nav router
-const _origNav = nav;
-// (nav già gestisce pagine via getElementById('page-'+p), funziona automaticamente)
+
+// ══════════════════════════════════════════
+// DASHBOARD CLIENTI
+// ══════════════════════════════════════════
+function rDashClienti(){
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+
+  // ── KPI ─────────────────────────────────
+  const tot     = FAT_CLIENTI.reduce((s,f)=>s+f.imp,0);
+  const incassato= FAT_CLIENTI.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const aperto  = FAT_CLIENTI.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
+  const ritardo = FAT_CLIENTI.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const nRitardo= FAT_CLIENTI.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').length;
+
+  const kpiEl = document.getElementById('dc-kpi');
+  if(kpiEl) kpiEl.innerHTML=[
+    {l:'Fatturato tot.',v:fmtE(tot),ic:'📊',c:'--ac'},
+    {l:'Incassato',v:fmtE(incassato),ic:'✅',c:'--green'},
+    {l:'Da incassare',v:fmtE(aperto),ic:'⏳',c:'--amber'},
+    {l:'In ritardo ('+nRitardo+')',v:fmtE(ritardo),ic:'⚠',c:'--red'},
+  ].map(k=>`<div class="kcard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(${k.c})"></div><div class="kcard-ico">${k.ic}</div><div class="kcard-lbl">${k.l}</div><div class="kcard-val" style="color:var(${k.c})">${k.v}</div></div>`).join('');
+
+  // ── Grafico mensile ─────────────────────
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const mData=Array(12).fill(0);
+  FAT_CLIENTI.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mData[m]+=f.imp; });
+  const mc=document.getElementById('dc-ch-monthly');
+  if(mc) setTimeout(()=>mkBarChart(mc, months, mData, 'rgba(45,212,191,.75)', 200), 10);
+
+  // ── Donut stato incassi ─────────────────
+  const donutData=[incassato, aperto, ritardo];
+  const donutLabels=['Incassato','Da incassare','In ritardo'];
+  const donutColors=['#34d399','#fbbf24','#f87171'];
+  const dc=document.getElementById('dc-ch-donut');
+  if(dc) setTimeout(()=>{ dc.innerHTML=mkDonut(dc, donutLabels, donutData, donutColors, 160); }, 10);
+
+  // ── Griglia clienti ─────────────────────
+  const g=document.getElementById('dc-grid'); if(!g) return;
+  const m2={};
+  FAT_CLIENTI.forEach(f=>{ 
+    if(!m2[f.cli]) m2[f.cli]={cli:f.cli, piva:f.piva||'', list:[], tot:0};
+    m2[f.cli].list.push(f); 
+    m2[f.cli].tot+=f.imp; 
+  });
+  g.innerHTML='';
+  Object.values(m2).sort((a,b)=>b.tot-a.tot).forEach(v=>{
+    const col=avatarCol(v.cli);
+    const inc =v.list.filter(f=>f.sta==='incassata').length;
+    const ap  =v.list.filter(f=>f.sta==='da_incassare').length;
+    const rit =v.list.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').length;
+    const totI=v.list.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+    const pct =v.tot>0?Math.round(totI/v.tot*100):0;
+    const card=document.createElement('div');
+    card.className='fcard';
+    card.style.cursor='pointer';
+    card.onclick=()=>{ nav('clienti'); setTimeout(()=>{ document.getElementById('fc-cli').value=v.cli; rCli(); },100); };
+    card.innerHTML=`
+      <div class="fav" style="background:${col}22;color:${col}">${initials(v.cli)}</div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:2px">${v.cli}</div>
+      <div style="font-size:11px;color:var(--tx3);font-family:monospace;margin-bottom:13px">${v.piva?'P.IVA '+v.piva:'—'}</div>
+      <div class="g2" style="margin-bottom:11px">
+        <div style="background:var(--bg3);padding:9px 11px;border-radius:var(--r)"><div style="font-size:10px;color:var(--tx3)">FATTURE</div><div style="font-size:20px;font-weight:700;margin-top:2px">${v.list.length}</div></div>
+        <div style="background:var(--bg3);padding:9px 11px;border-radius:var(--r)"><div style="font-size:10px;color:var(--tx3)">TOTALE</div><div style="font-family:monospace;font-size:12px;font-weight:500;margin-top:4px">${fmtE(v.tot)}</div></div>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">INCASSATO ${pct}%</div>
+      <div class="pbar-w"><div class="pbar" style="width:${pct}%;background:${col}"></div></div>
+      <div style="display:flex;gap:5px;margin-top:11px;flex-wrap:wrap">
+        ${inc?`<span class="badge bg">${inc} inc.</span>`:''}
+        ${ap?`<span class="badge ba">${ap} aperte</span>`:''}
+        ${rit?`<span class="badge br_">${rit} ritardo</span>`:''}
+      </div>`;
+    g.appendChild(card);
+  });
+
+  // ── Tabella scadenze ────────────────────
+  const now = new Date();
+  const rows=[];
+  FAT_CLIENTI.forEach(f=>{
+    const scs=f.scadenze||[];
+    if(scs.length){
+      scs.filter(s=>s.sta!=='incassata'&&s.data).forEach(s=>{
+        const scDate=new Date(s.data);
+        const diff=Math.floor((scDate-now)/86400000);
+        rows.push({...f,_diff:diff,_scDate:scDate,_scImp:s.imp||f.imp,_scNt:s.nt||''});
+      });
+    } else if(f.sta!=='incassata'){
+      const scDate=f.sc?new Date(f.sc):null;
+      rows.push({...f,_diff:scDate?Math.floor((scDate-now)/86400000):null,_scDate:scDate,_scImp:f.imp,_scNt:''});
+    }
+  });
+  rows.sort((a,b)=>{ if(a._diff===null)return 1; if(b._diff===null)return -1; return a._diff-b._diff; });
+
+  const tEl=document.getElementById('dc-scad-table');
+  if(!tEl) return;
+  if(!rows.length){ tEl.innerHTML='<div class="empty"><div class="empty-ico">✅</div><div style="font-size:13px">Nessuna scadenza aperta</div></div>'; return; }
+  tEl.innerHTML=`<div class="tcard"><div class="twrap"><table>
+    <thead><tr><th>Cliente</th><th>Numero</th><th>Data</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Giorni</th></tr></thead>
+    <tbody>${rows.map(f=>{
+      const diff=f._diff;
+      const gg=diff===null?'—':diff<0?`<span style="color:var(--red);font-weight:600">${Math.abs(diff)}gg fa</span>`:diff===0?'<span style="color:var(--amber);font-weight:600">Oggi</span>':`${diff}gg`;
+      return `<tr>
+        <td style="font-weight:500;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.cli}${f._scNt?'<br><span style="font-size:10px;color:var(--tx3)">'+f._scNt+'</span>':''}</td>
+        <td style="font-family:monospace;font-size:11px;color:var(--teal)">${f.num}</td>
+        <td style="font-size:12px;color:var(--tx2)">${f.dt}</td>
+        <td style="font-size:12px;color:${diff!==null&&diff<0?'var(--red)':'var(--tx2)'}">${f._scDate?f._scDate.toISOString().split('T')[0]:'—'}</td>
+        <td style="font-family:monospace;font-weight:500">${fmtE(f._scImp)}</td>
+        <td>${bStaCli(f.sta)}</td>
+        <td>${gg}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div></div>`;
+}
+
+// ══════════════════════════════════════════
+// EXPORT FATTURE CLIENTI — CSV / XLSX / PDF
+// ══════════════════════════════════════════
+function exportCliCsv(){
+  const bom='\uFEFF';
+  const header=['Numero','Cliente','P.IVA','Data','Scadenza','Importo EUR','IVA %','Stato','Data Incasso','Note'];
+  const rows=[header];
+  FAT_CLIENTI.forEach(f=>{
+    const sc=getCliNextSc(f)||'';
+    rows.push([f.num,f.cli,f.piva||'',f.dt,sc,(f.imp||0).toFixed(2),f.iva||22,f.sta,f.dpag||'',(f.nt||'').replace(/,/g,';').replace(/\n/g,' ')]);
+  });
+  const csv=bom+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='fatture_clienti_'+today()+'.csv'; a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Fatture clienti esportate in CSV');
+}
+
+function exportCliXlsx(){
+  if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
+  const wsData=[['Numero','Cliente','P.IVA','Data','Scadenza','Importo €','IVA %','Stato','Data Incasso','Note']];
+  FAT_CLIENTI.forEach(f=>{
+    wsData.push([f.num,f.cli,f.piva||'',f.dt,getCliNextSc(f)||'',f.imp||0,f.iva||22,f.sta,f.dpag||'',f.nt||'']);
+  });
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
+  // Style header row width
+  ws['!cols']=[{wch:14},{wch:28},{wch:16},{wch:12},{wch:12},{wch:12},{wch:7},{wch:14},{wch:12},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws,'Fatture Clienti');
+  // Scadenze sheet
+  const scData=[['Cliente','Numero','Data','Scadenza','Importo','Stato','Giorni mancanti']];
+  const now=new Date();
+  FAT_CLIENTI.forEach(f=>{
+    (f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).forEach(s=>{
+      const diff=Math.floor((new Date(s.data)-now)/86400000);
+      scData.push([f.cli,f.num,f.dt,s.data,s.imp||f.imp,s.sta,diff]);
+    });
+  });
+  const ws2=XLSX.utils.aoa_to_sheet(scData);
+  ws2['!cols']=[{wch:28},{wch:14},{wch:12},{wch:12},{wch:12},{wch:14},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Scadenze Aperte');
+  XLSX.writeFile(wb,'fatture_clienti_'+today()+'.xlsx');
+  toast('Fatture clienti esportate in XLSX');
+}
+
+async function exportCliPdf(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+  const tot=FAT_CLIENTI.reduce((s,f)=>s+f.imp,0);
+  const inc=FAT_CLIENTI.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const ap =FAT_CLIENTI.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
+  const rit=FAT_CLIENTI.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+
+  const staLabel=s=>({incassata:'Incassata',da_incassare:'Da incassare',in_ritardo:'In ritardo',scaduta:'Scaduta'}[s]||s);
+  const rows=[...FAT_CLIENTI].sort((a,b)=>a.dt.localeCompare(b.dt));
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Fatture Clienti</title>
+<style>
+body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a2e;margin:0;padding:0}
+.header{background:#0f3460;color:#fff;padding:24px 32px;margin-bottom:0}
+.header h1{margin:0 0 4px;font-size:22px;font-weight:800}
+.header p{margin:0;font-size:11px;opacity:.8}
+.kpi-row{display:flex;gap:0;background:#f8f9fc;border-bottom:1px solid #e5e7eb}
+.kpi{flex:1;padding:14px 20px;border-right:1px solid #e5e7eb}
+.kpi:last-child{border-right:none}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;font-weight:600;margin-bottom:4px}
+.kpi-val{font-size:18px;font-weight:700;color:#0f3460}
+.kpi-val.green{color:#059669}.kpi-val.amber{color:#d97706}.kpi-val.red{color:#dc2626}
+.section{padding:20px 32px}
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#374151;margin-bottom:12px;border-bottom:2px solid #e5e7eb;padding-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{background:#f3f4f6;padding:8px 10px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.4px;font-size:9px;color:#6b7280;border-bottom:2px solid #e5e7eb}
+tbody tr{border-bottom:1px solid #f3f4f6}
+tbody tr:nth-child(even){background:#fafafa}
+td{padding:7px 10px;vertical-align:middle}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:600}
+.badge-inc{background:#d1fae5;color:#065f46}
+.badge-ap{background:#fef3c7;color:#92400e}
+.badge-rit{background:#fee2e2;color:#991b1b}
+.footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:12px 32px;font-size:10px;color:#9ca3af;text-align:center}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div class="header"><h1>📊 Fatture Clienti</h1><p>Generato il ${dateStr} · ${rows.length} fatture · GestFatture Pro</p></div>
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-label">Totale fatturato</div><div class="kpi-val">${fmtE(tot)}</div></div>
+  <div class="kpi"><div class="kpi-label">Incassato</div><div class="kpi-val green">${fmtE(inc)}</div></div>
+  <div class="kpi"><div class="kpi-label">Da incassare</div><div class="kpi-val amber">${fmtE(ap)}</div></div>
+  <div class="kpi"><div class="kpi-label">In ritardo</div><div class="kpi-val red">${fmtE(rit)}</div></div>
+</div>
+<div class="section">
+<div class="section-title">Elenco fatture clienti</div>
+<table><thead><tr><th>Numero</th><th>Cliente</th><th>P.IVA</th><th>Data</th><th>Scadenza</th><th>Importo</th><th>IVA</th><th>Stato</th><th>Note</th></tr></thead>
+<tbody>${rows.map(f=>{
+  const sc=getCliNextSc(f)||'—';
+  const badgeClass=f.sta==='incassata'?'badge-inc':f.sta==='da_incassare'?'badge-ap':'badge-rit';
+  return `<tr>
+    <td style="font-family:monospace;color:#0f3460">${f.num}</td>
+    <td style="font-weight:600">${f.cli}</td>
+    <td style="font-family:monospace;font-size:10px;color:#6b7280">${f.piva||'—'}</td>
+    <td>${f.dt}</td>
+    <td>${sc}</td>
+    <td style="font-family:monospace;font-weight:600">${fmtE(f.imp)}</td>
+    <td>${f.iva||22}%</td>
+    <td><span class="badge ${badgeClass}">${staLabel(f.sta)}</span></td>
+    <td style="color:#6b7280;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.nt||''}</td>
+  </tr>`;
+}).join('')}</tbody></table>
+</div>
+<div class="section">
+<div class="section-title">Scadenze aperte</div>
+<table><thead><tr><th>Cliente</th><th>N° Fattura</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Giorni</th></tr></thead>
+<tbody>${FAT_CLIENTI.flatMap(f=>(f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).map(s=>{
+  const diff=Math.floor((new Date(s.data)-now)/86400000);
+  const ggTxt=diff<0?`SCADUTA ${Math.abs(diff)}gg fa`:diff===0?'Oggi':diff+'gg';
+  const color=diff<0?'#dc2626':diff<=7?'#d97706':'#374151';
+  return `<tr>
+    <td style="font-weight:600">${f.cli}</td>
+    <td style="font-family:monospace;color:#0f3460">${f.num}</td>
+    <td>${s.data}</td>
+    <td style="font-family:monospace;font-weight:600">${fmtE(s.imp||f.imp)}</td>
+    <td><span class="badge ${s.sta==='in_ritardo'||diff<0?'badge-rit':'badge-ap'}">${staLabel(s.sta)}</span></td>
+    <td style="color:${color};font-weight:600">${ggTxt}</td>
+  </tr>`;
+})).join('')}</tbody></table>
+</div>
+<div class="footer">GestFatture Pro · Documento generato automaticamente · ${dateStr}</div>
+</body></html>`;
+
+  const win=window.open('','_blank','width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+  win.onload=()=>{ setTimeout(()=>win.print(),400); };
+  toast('PDF pronto — verrà aperto il dialogo di stampa');
+}
+
+// Aggiungi al toWrap dell'autoSave
+// (exportCliPdf/Csv/Xlsx non modificano dati, non serve wrapping)
+
 
 </script>
 </html>
