@@ -3686,36 +3686,18 @@ function selClifat(id){
     </div>
     <div class="invh">
       <div style="font-weight:600;font-size:13px;margin-bottom:2px">${f.cli}</div>
+      ${f.piva?'<div style="font-size:11px;color:var(--tx3);font-family:monospace;margin-bottom:10px">P.IVA '+f.piva+'</div>':'<div style="margin-bottom:10px"></div>'}
       <div class="invamt" style="color:var(--teal)">${fmtE(f.imp)}</div>
       <div style="font-size:11px;color:var(--tx3);margin-top:4px">Data: ${f.dt}</div>
     </div>
-    <div class="psec">Anagrafica cliente</div>
-    <div class="fg"><label class="fl2">RAGIONE SOCIALE</label>
-      <input type="text" id="cli-ana-nome" style="width:100%" value="${(f.cli||'').replace(/"/g,'&quot;')}" oninput="updCli('cli',this.value)">
-    </div>
-    <div class="fg"><label class="fl2">P.IVA / C.F.</label>
-      <input type="text" id="cli-ana-piva" style="width:100%;font-family:monospace" value="${(f.piva||'').replace(/"/g,'&quot;')}" oninput="updCli('piva',this.value)">
-    </div>
-    <div class="fg"><label class="fl2">📧 EMAIL SOLLECITI</label>
-      <input type="email" id="cli-ana-email" style="width:100%" value="${(f.email||'').replace(/"/g,'&quot;')}" placeholder="email@cliente.it" oninput="updCli('email',this.value)">
-    </div>
-    <div class="fg"><label class="fl2">📧 EMAIL CC (opzionale)</label>
-      <input type="email" id="cli-ana-email2" style="width:100%" value="${(f.email2||'').replace(/"/g,'&quot;')}" placeholder="cc@cliente.it" oninput="updCli('email2',this.value)">
-    </div>
-    <div class="fg"><label class="fl2">📞 TELEFONO</label>
-      <input type="tel" id="cli-ana-tel" style="width:100%" value="${(f.tel||'').replace(/"/g,'&quot;')}" placeholder="+39 02 123456" oninput="updCli('tel',this.value)">
-    </div>
-    <div class="fg"><label class="fl2">📍 INDIRIZZO</label>
-      <input type="text" id="cli-ana-addr" style="width:100%" value="${(f.indirizzo||'').replace(/"/g,'&quot;')}" placeholder="Via Roma 1, Milano" oninput="updCli('indirizzo',this.value)">
-    </div>
-    ${f.li?.length?'<div style="margin-bottom:13px"><div class="psec">Righe fattura</div>'+f.li.map(l=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--br)"><span style="color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+l.d+'</span><span style="font-family:monospace">'+fmtE(l.q*l.p)+'</span></div>').join('')+'</div>':''}
+    ${f.li?.length?'<div style="margin-bottom:13px"><div class="psec">Righe</div>'+f.li.map(l=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--br)"><span style="color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+l.d+'</span><span style="font-family:monospace">'+fmtE(l.q*l.p)+'</span></div>').join('')+'</div>':''}
     <div class="div"></div>
     <div class="psec">Scadenze incasso</div>
     <div id="cli-sc-list" style="margin-bottom:5px"></div>
     <button class="btn btn-xs" onclick="addCliScadenza('${f.id}')">+ Scadenza</button>
     <div class="div"></div>
     <div class="fg"><label class="fl2">NOTE</label><textarea id="cli-nt" style="width:100%" rows="2" oninput="updCli('nt',this.value)">${f.nt||''}</textarea></div>
-    <button class="btn btn-p" style="width:100%;margin-top:8px;justify-content:center" onclick="saveCli()">💾 Salva anagrafica e dati</button>
+    <button class="btn btn-p" style="width:100%;margin-top:8px;justify-content:center" onclick="saveCli()">💾 Salva</button>
     <div class="div"></div>
     <button class="btn btn-sm" style="width:100%;justify-content:center;gap:6px;border-color:rgba(248,113,113,.4);color:var(--red)" onclick="openSollecito('${f.id}')">
       📧 Invia sollecito pagamento
@@ -4160,14 +4142,10 @@ async function startBatchImport(){
   document.getElementById('batch-import-btn').style.display='none';
   batchRunning = false;
 
-  // Refresh & save — forza sync cloud subito dopo batch
+  // Refresh & save
   if(batchMode==='fornitore'){ rFat(); rDash(); }
   else { rCli(); }
-  updBadge(); checkOverdueAlerts();
-  saveData();
-  // Sync immediato senza aspettare il debounce da 1.5s
-  clearTimeout(syncTimeout);
-  syncTimeout=setTimeout(syncToCloud,200);
+  updBadge(); checkOverdueAlerts(); saveData();
   toast(`Import completato: ${ok} fatture importate${errs?' · '+errs+' errori':''}`);
 }
 
@@ -4434,13 +4412,7 @@ function buildMsolPreviews(){
       <div style="padding:10px 13px">
         <div style="margin-bottom:6px">
           <label class="fl2">A</label>
-          <input type="email" id="msol-to-${gi}" style="width:100%;font-size:12px;padding:4px 8px" placeholder="${g.cli.toLowerCase().replace(/\s+/g,'.')}@email.com"
-            value="${(()=>{ const _af=FAT_CLIENTI.find(f=>f.cli===g.cli); return _af?.email||''; })()}">
-          <div style="margin-top:5px">
-            <label style="font-size:10px;color:var(--tx3)">CC</label>
-            <input type="email" id="msol-cc2-${gi}" style="width:100%;font-size:12px;padding:3px 8px;margin-top:2px" placeholder="cc opzionale"
-              value="${(()=>{ const _af=FAT_CLIENTI.find(f=>f.cli===g.cli); return _af?.email2||''; })()}">
-          </div>
+          <input type="email" id="msol-to-${gi}" style="width:100%;font-size:12px;padding:4px 8px" placeholder="${g.cli.toLowerCase().replace(/\s+/g,'.')}@email.com">
         </div>
         <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">OGGETTO: ${subj}</div>
       </div>
@@ -4506,10 +4478,8 @@ async function msolSendAll(){
     const {subj, body} = SOL_TEMPLATES[msolTemplate](g.cli, fatCombined, allScad, firma);
     const finalBody = bodyEl?.value || body;
 
-    const perCliCc = document.getElementById(`msol-cc2-${gi}`)?.value?.trim()||'';
-    const allCcs = [globalCc, perCliCc].filter(Boolean).join(',');
     let href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(finalBody);
-    if(allCcs) href+='&cc='+encodeURIComponent(allCcs);
+    if(globalCc) href+='&cc='+encodeURIComponent(globalCc);
     window.open(href, '_blank');
     sent++;
 
@@ -4593,10 +4563,8 @@ function openSollecito(fatId){
     </div>
     <div style="font-size:11px;color:var(--tx3);margin-top:7px">Fattura ${f.num} del ${f.dt} · ${selected.length} rata${selected.length>1?'e':''}</div>`;
 
-  // Auto-fill email dall'anagrafica della fattura cliente
-  const _solAnaF = FAT_CLIENTI.find(x=>x.id===fatId);
-  document.getElementById('sol-to').value  = _solAnaF?.email  || '';
-  document.getElementById('sol-cc').value  = _solAnaF?.email2 || '';
+  document.getElementById('sol-to').value = '';
+  document.getElementById('sol-cc').value = '';
   const savedFirma = localStorage.getItem('gestfatture_firma')||'';
   document.getElementById('sol-firma').value = savedFirma;
 
@@ -4818,98 +4786,69 @@ async function afterLogin(){
 
 // ── SAVE / SYNC ──────────────────────────────────────────────────────────
 function saveData(){
-  const ts = new Date().toISOString();
-  const payload={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:ts};
-  // 1. Salva SEMPRE in localStorage (istantaneo, offline-safe)
+  const payload={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS};
   try{ localStorage.setItem(STORE_KEY,JSON.stringify(payload)); }catch(e){}
-  // 2. Schedula sync cloud con debounce
   clearTimeout(syncTimeout);
-  syncTimeout=setTimeout(syncToCloud,1500);
+  syncTimeout=setTimeout(syncToCloud,1600);
 }
 
 async function syncToCloud(){
-  // Funziona anche senza currentUser — usa sempre il binId se loggato
-  if(isSyncing) return;
-  if(!currentUser) return;  // loggato ma non ha binId → skip silenzioso
+  if(!currentUser||isSyncing) return;
   isSyncing=true;
   showSync('syncing','Salvataggio…');
   try{
-    const ts = new Date().toISOString();
     await jbSet(currentUser.binId,{
       FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,
-      _saved:ts
+      _saved:new Date().toISOString()
     });
-    // Aggiorna il timestamp nel locale per confronto futuro
-    try{
-      const raw=localStorage.getItem(STORE_KEY);
-      if(raw){ const p=JSON.parse(raw); p._saved=ts; localStorage.setItem(STORE_KEY,JSON.stringify(p)); }
-    }catch(e){}
     showSync('ok','Salvato ✓');
   }catch(e){
     console.warn('Sync error:',e);
-    showSync('err','Solo locale — riprovo tra 15s');
-    // Riprova automaticamente tra 15 secondi
-    clearTimeout(syncTimeout);
-    syncTimeout=setTimeout(syncToCloud,15000);
+    showSync('err','Errore salvataggio');
   }finally{ isSyncing=false; }
 }
 
 // ── LOAD ─────────────────────────────────────────────────────────────────
 async function loadData(){
-  // Step 1: carica SEMPRE localStorage prima (istantaneo)
-  let localSaved='';
-  try{
-    const raw=localStorage.getItem(STORE_KEY);
-    if(raw){
-      const d=JSON.parse(raw);
+  if(currentUser){
+    try{
+      showSync('syncing','Caricamento…');
+      const d=await jbGet(currentUser.binId);
       if(d.FAT)           FAT           =d.FAT;
       if(d.CC)            CC            =d.CC;
       if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
       if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
       if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
       if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
-      localSaved=d._saved||'';
-    }
-  }catch(e){}
-
-  // Step 2: scarica dal cloud e usa SOLO se più recente del locale
-  if(currentUser){
-    try{
-      showSync('syncing','Verifica cloud…');
-      const d=await jbGet(currentUser.binId);
-      const cloudSaved=d._saved||'';
-      // Usa il cloud solo se ha un _saved più recente del locale
-      if(!localSaved||(cloudSaved&&cloudSaved>localSaved)){
-        if(d.FAT)           FAT           =d.FAT;
-        if(d.CC)            CC            =d.CC;
-        if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
-        if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
-        if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
-        if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
-        // Aggiorna locale col cloud più recente
-        const p={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,_saved:cloudSaved};
-        try{ localStorage.setItem(STORE_KEY,JSON.stringify(p)); }catch(e){}
-        showSync('ok','Cloud caricato ✓');
-      } else {
-        // Locale più recente del cloud → carica il locale sul cloud subito
-        showSync('ok','Dati locali più recenti — upload…');
-        clearTimeout(syncTimeout);
-        syncTimeout=setTimeout(syncToCloud,300);
-      }
+      const payload={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS};
+      localStorage.setItem(STORE_KEY,JSON.stringify(payload));
+      showSync('ok','Dati caricati');
       return true;
     }catch(e){
-      console.warn('Cloud load failed, using local cache:',e);
-      showSync('err','Cloud non raggiungibile — uso cache locale');
+      console.warn('Cloud load failed, using cache:',e);
+      showSync('err','Uso cache locale');
     }
   }
-  return !!localSaved;
+  // Fallback cache locale
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(!raw) return false;
+    const d=JSON.parse(raw);
+    if(d.FAT)           FAT           =d.FAT;
+    if(d.CC)            CC            =d.CC;
+    if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
+    if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
+    if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
+    if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
+    return true;
+  }catch(e){ return false; }
 }
 
 // ── DELETE ALL ────────────────────────────────────────────────────────────
 async function _doDeleteAll(){
   if(currentUser){
     try{
-      await jbSet(currentUser.binId,{FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[],_saved:new Date().toISOString()});
+      await jbSet(currentUser.binId,{FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[]});
     }catch(e){ console.warn('Cloud delete failed:',e); }
   }
   localStorage.removeItem(STORE_KEY);
