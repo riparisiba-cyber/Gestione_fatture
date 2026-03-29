@@ -399,7 +399,7 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
   <div class="sb-sec">Panoramica</div>
   <div class="ni active" data-p="dashboard" onclick="nav('dashboard')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    Dashboard
+    Panoramica
   </div>
   <div class="sb-sec">Gestione</div>
   <div class="ni" data-p="fatture" onclick="nav('fatture')">
@@ -413,7 +413,7 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
   </div>
   <div class="ni" data-p="fornitori" onclick="nav('fornitori')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-    Fornitori
+    Dashboard Fornitori
   </div>
   <div class="ni" data-p="clienti" onclick="nav('clienti')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
@@ -423,6 +423,18 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
   <div class="ni" data-p="banca" onclick="nav('banca')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
     Estratto Conto
+  </div>
+  <div class="ni" data-p="spese" onclick="nav('spese')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    Spese Generali
+  </div>
+  <div class="ni" data-p="anticipi" onclick="nav('anticipi')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+    Anticipo Fatture
+  </div>
+  <div class="ni" data-p="contoeconomico" onclick="nav('contoeconomico')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+    Conto Economico
   </div>
   <div class="ni" data-p="dashclienti" onclick="nav('dashclienti')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
@@ -457,47 +469,152 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
 <!-- MAIN -->
 <main id="main">
 
-<!-- DASHBOARD -->
+<!-- PANORAMICA -->
 <div id="page-dashboard" class="page">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:8px">
       <button onclick="sbToggle()">☰</button>
-      <div class="ptitle">Dashboard</div>
+      <div class="ptitle">📊 Panoramica</div>
     </div>
     <div class="tbar-r">
       <span style="font-size:11px;color:var(--tx3)" id="dd-date"></span>
-      <label class="btn btn-sm" for="pdf-d" style="cursor:pointer">📄 PDF</label>
-      <input type="file" id="pdf-d" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="doPDF(this.files)">
-      <button class="btn btn-sm" onclick="openCameraModal()">📷 Foto</button>
-      <label class="btn btn-sm" for="xml-d" style="cursor:pointer">↑ XML</label>
-      <input type="file" id="xml-d" accept=".xml" multiple onchange="doXML(this.files)">
-      <button class="btn btn-p btn-sm" onclick="openBatch('fornitore')">📦 Import Massivo</button>
+      <select id="dash-yr" onchange="rDash()" style="font-size:12px"><option value="">Tutti gli anni</option></select>
+      <select id="dash-mo" onchange="rDash()" style="font-size:12px">
+        <option value="">Tutti i mesi</option>
+        <option value="01">Gennaio</option><option value="02">Febbraio</option>
+        <option value="03">Marzo</option><option value="04">Aprile</option>
+        <option value="05">Maggio</option><option value="06">Giugno</option>
+        <option value="07">Luglio</option><option value="08">Agosto</option>
+        <option value="09">Settembre</option><option value="10">Ottobre</option>
+        <option value="11">Novembre</option><option value="12">Dicembre</option>
+      </select>
+      <button class="btn btn-xs" onclick="resetDashFilter('dash')" title="Reset filtro">✕</button>
+      <button class="btn btn-sm" onclick="exportPanoramicaXlsx()">📗 XLSX</button>
+      <button class="btn btn-p btn-sm" onclick="exportPanoramicaPdf()">📄 PDF</button>
     </div>
   </div>
   <div class="pscroll"><div class="pcont">
-    <div class="kgrid" id="kgrid"></div>
-    <div class="g2" style="margin-bottom:14px">
-      <div class="card">
-        <div style="font-size:13px;font-weight:600;margin-bottom:14px">Spese mensili 2024</div>
-        <div id="ch-monthly" style="height:220px"></div>
+
+    <!-- RIGA HERO: saldo netto -->
+    <div style="background:linear-gradient(135deg,var(--bg3),var(--bg4));border:1px solid var(--br2);border-radius:var(--r2);padding:22px 26px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+      <div>
+        <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px">Saldo Netto — Entrate vs Uscite</div>
+        <div id="hero-saldo" style="font-size:32px;font-weight:800;letter-spacing:-1px">—</div>
+        <div id="hero-sub" style="font-size:12px;color:var(--tx3);margin-top:4px">—</div>
       </div>
-      <div class="card">
-        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Centri di costo</div>
-        <div id="ch-donut" style="height:220px;display:flex;align-items:center;gap:14px"></div>
+      <div style="display:flex;gap:28px;flex-wrap:wrap">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:4px">↑ Incassi clienti</div>
+          <div id="hero-inc" style="font-family:monospace;font-size:18px;font-weight:700;color:var(--teal)">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--violet);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:4px">↓ Uscite totali</div>
+          <div id="hero-out" style="font-family:monospace;font-size:18px;font-weight:700;color:var(--violet)">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:4px">⚠ Scadenze 30gg</div>
+          <div id="hero-scad" style="font-family:monospace;font-size:18px;font-weight:700;color:var(--amber)">—</div>
+        </div>
       </div>
     </div>
+
+    <!-- KPI DOPPIA RIGA: fornitori | clienti -->
+    <div class="g2" style="margin-bottom:16px">
+
+      <!-- BLOCCO FORNITORI -->
+      <div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--r2);padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--violet)">🏭 Fornitori</div>
+          <button class="btn btn-xs" onclick="nav('fornitori')" style="color:var(--violet);border-color:rgba(167,139,250,.3)">Dashboard →</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
+            <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Totale acquistato</div>
+            <div id="pf-tot" style="font-size:18px;font-weight:700;color:var(--tx)">—</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
+            <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Da pagare</div>
+            <div id="pf-dap" style="font-size:18px;font-weight:700;color:var(--amber)">—</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
+            <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Pagato</div>
+            <div id="pf-pag" style="font-size:18px;font-weight:700;color:var(--green)">—</div>
+          </div>
+          <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:var(--r);padding:12px">
+            <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Scaduto</div>
+            <div id="pf-sc" style="font-size:18px;font-weight:700;color:var(--red)">—</div>
+          </div>
+        </div>
+        <!-- Barra % pagato -->
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Pagato <span id="pf-pct">0</span>% del totale</div>
+        <div class="pbar-w"><div id="pf-pbar" class="pbar" style="width:0%;background:var(--green)"></div></div>
+        <!-- Top 3 fornitori -->
+        <div style="margin-top:14px;font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Top Fornitori</div>
+        <div id="pf-top" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+
+      <!-- BLOCCO CLIENTI -->
+      <div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--r2);padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--teal)">👥 Clienti</div>
+          <button class="btn btn-xs" onclick="nav('dashclienti')" style="color:var(--teal);border-color:rgba(45,212,191,.3)">Dashboard →</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
+            <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Totale fatturato</div>
+            <div id="pc-tot" style="font-size:18px;font-weight:700;color:var(--tx)">—</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
+            <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Da incassare</div>
+            <div id="pc-dai" style="font-size:18px;font-weight:700;color:var(--amber)">—</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--r);padding:12px">
+            <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Incassato</div>
+            <div id="pc-inc" style="font-size:18px;font-weight:700;color:var(--green)">—</div>
+          </div>
+          <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:var(--r);padding:12px">
+            <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">In ritardo</div>
+            <div id="pc-rit" style="font-size:18px;font-weight:700;color:var(--red)">—</div>
+          </div>
+        </div>
+        <!-- Barra % incassato -->
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Incassato <span id="pc-pct">0</span>% del totale</div>
+        <div class="pbar-w"><div id="pc-pbar" class="pbar" style="width:0%;background:var(--teal)"></div></div>
+        <!-- Top 3 clienti -->
+        <div style="margin-top:14px;font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Top Clienti</div>
+        <div id="pc-top" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+
+    <!-- GRAFICO CONFRONTO MENSILE -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:13px;font-weight:700">📈 Confronto mensile — Entrate vs Uscite</div>
+        <div style="display:flex;gap:14px;font-size:11px;color:var(--tx3)">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(45,212,191,.7);margin-right:4px"></span>Incassi clienti</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(167,139,250,.7);margin-right:4px"></span>Spese fornitori</span>
+        </div>
+      </div>
+      <div id="ch-confronto" style="height:230px"></div>
+    </div>
+
+    <!-- RIGA BASSA: scadenze critiche + stato globale -->
     <div class="g2">
+      <!-- Scadenze urgenti (fornitori + clienti) -->
       <div class="card">
-        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Ultime fatture</div>
-        <table><tbody id="d-recent"></tbody></table>
+        <div style="font-size:13px;font-weight:700;margin-bottom:14px">⏰ Scadenze urgenti (prossimi 30gg)</div>
+        <div id="d-scad-new" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
+      <!-- Stato globale donut -->
       <div class="card">
-        <div style="font-size:13px;font-weight:600;margin-bottom:12px">⚠ Scadenze critiche</div>
-        <div id="d-scad"></div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">🧩 Distribuzione globale crediti/debiti</div>
+        <div id="ch-global-donut" style="height:200px;display:flex;align-items:center;gap:14px"></div>
       </div>
     </div>
+
   </div></div>
 </div>
+<!-- /PANORAMICA -->
 
 <!-- FATTURE -->
 <div id="page-fatture" class="page hidden">
@@ -598,13 +715,58 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
   </div></div>
 </div>
 
-<!-- FORNITORI -->
+<!-- DASHBOARD FORNITORI -->
 <div id="page-fornitori" class="page hidden">
-  <div class="topbar"><div class="ptitle">Fornitori</div></div>
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="sbToggle()">☰</button>
+      <div class="ptitle">🏭 Dashboard Fornitori</div>
+    </div>
+    <div class="tbar-r">
+      <select id="forn-yr" onchange="rDashFornitori()" style="font-size:12px"><option value="">Tutti gli anni</option></select>
+      <select id="forn-mo" onchange="rDashFornitori()" style="font-size:12px">
+        <option value="">Tutti i mesi</option>
+        <option value="01">Gennaio</option><option value="02">Febbraio</option>
+        <option value="03">Marzo</option><option value="04">Aprile</option>
+        <option value="05">Maggio</option><option value="06">Giugno</option>
+        <option value="07">Luglio</option><option value="08">Agosto</option>
+        <option value="09">Settembre</option><option value="10">Ottobre</option>
+        <option value="11">Novembre</option><option value="12">Dicembre</option>
+      </select>
+      <button class="btn btn-xs" onclick="resetDashFilter('forn')" title="Reset filtro">✕</button>
+      <button class="btn btn-sm" onclick="exportFornCsv()">📊 CSV</button>
+      <button class="btn btn-sm" onclick="exportFornXlsx()">📗 XLSX</button>
+      <button class="btn btn-p btn-sm" onclick="exportFornPdf()">📄 PDF</button>
+    </div>
+  </div>
   <div class="pscroll"><div class="pcont">
-    <div id="fgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:13px" class="fgrid"></div>
+    <!-- KPI -->
+    <div class="kgrid" id="df-kpi" style="margin-bottom:18px"></div>
+    <!-- Grafici -->
+    <div class="g2" style="margin-bottom:14px">
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Spese mensili fornitori</div>
+        <div id="df-ch-monthly" style="height:200px"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Stato pagamenti</div>
+        <div id="df-ch-donut" style="height:200px;display:flex;align-items:center;gap:14px"></div>
+      </div>
+    </div>
+    <!-- Griglia fornitori -->
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--tx2)">🏭 Fornitori</div>
+    <div id="fgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:20px" class="fgrid"></div>
+    <!-- Scadenze fornitori -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:13px;font-weight:600">📅 Scadenze fornitori aperte</div>
+        <button class="btn btn-xs" onclick="exportScadenze()">⬇ Esporta CSV</button>
+      </div>
+      <div id="df-scad-table"></div>
+    </div>
   </div></div>
 </div>
+<!-- /DASHBOARD FORNITORI -->
 
 <!-- CENTRI DI COSTO -->
 <div id="page-centricosto" class="page hidden">
@@ -639,6 +801,7 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
       <select id="rep-yr" onchange="rReport()" style="font-size:12px"></select>
       <button class="btn btn-sm" onclick="exportScadenze()">📅 Esporta scadenze</button>
       <button class="btn btn-sm" onclick="exportFattureCsv()">📊 Esporta CSV</button>
+      <span id="fat-export-hint" style="font-size:10px;color:var(--amber);display:none">⚡ filtrato</span>
     </div>
   </div>
   <div class="pscroll"><div class="pcont">
@@ -672,6 +835,7 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
       <button class="btn btn-sm" onclick="exportCliCsv()">📊 CSV</button>
       <button class="btn btn-sm" onclick="exportCliXlsx()">📗 XLSX</button>
       <button class="btn btn-sm" onclick="exportCliPdf()">📄 PDF</button>
+      <span id="cli-export-hint" style="font-size:10px;color:var(--amber);display:none">⚡ filtrato</span>
       <button class="btn btn-p btn-sm" onclick="openBatch('cliente')">📦 Import Massivo</button>
       <button class="btn btn-sm" onclick="openMCli()">+ Nuova</button>
     </div>
@@ -748,9 +912,20 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
       <div class="ptitle">👥 Dashboard Clienti</div>
     </div>
     <div class="tbar-r">
-      <button class="btn btn-sm" onclick="exportCliCsv()">📊 Esporta CSV</button>
-      <button class="btn btn-p btn-sm" onclick="exportCliPdf()">📄 Esporta PDF</button>
-      <button class="btn btn-sm" onclick="exportCliXlsx()">📗 Esporta XLSX</button>
+      <select id="cli-yr" onchange="rDashClienti()" style="font-size:12px"><option value="">Tutti gli anni</option></select>
+      <select id="cli-mo" onchange="rDashClienti()" style="font-size:12px">
+        <option value="">Tutti i mesi</option>
+        <option value="01">Gennaio</option><option value="02">Febbraio</option>
+        <option value="03">Marzo</option><option value="04">Aprile</option>
+        <option value="05">Maggio</option><option value="06">Giugno</option>
+        <option value="07">Luglio</option><option value="08">Agosto</option>
+        <option value="09">Settembre</option><option value="10">Ottobre</option>
+        <option value="11">Novembre</option><option value="12">Dicembre</option>
+      </select>
+      <button class="btn btn-xs" onclick="resetDashFilter('cli')" title="Reset filtro">✕</button>
+      <button class="btn btn-sm" onclick="exportCliCsv()">📊 CSV</button>
+      <button class="btn btn-sm" onclick="exportCliXlsx()">📗 XLSX</button>
+      <button class="btn btn-p btn-sm" onclick="exportCliPdf()">📄 PDF</button>
     </div>
   </div>
   <div class="pscroll"><div class="pcont">
@@ -919,7 +1094,316 @@ td{padding:10px 13px;font-size:13px;vertical-align:middle}
 </div>
 <!-- /ESTRATTO CONTO -->
 
+<!-- SPESE GENERALI -->
+<div id="page-spese" class="page hidden">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="sbToggle()">☰</button>
+      <div class="ptitle">💸 Spese Generali</div>
+    </div>
+    <div class="tbar-r">
+      <div class="swrap"><span class="sico">🔍</span><input type="text" id="ss-q" placeholder="Cerca…" style="width:130px" oninput="rSpese()"></div>
+      <select id="ss-cat" onchange="rSpese()" style="font-size:12px"><option value="">Tutte le categorie</option></select>
+      <select id="ss-yr" onchange="rSpese()" style="font-size:12px"></select>
+      <button class="btn btn-xs" onclick="resetSpese()">✕</button>
+      <button class="btn btn-sm" onclick="exportSpeseXlsx()">📗 XLSX</button>
+      <button class="btn btn-sm" onclick="exportSpesePdf()">📄 PDF</button>
+      <button class="btn btn-p btn-sm" onclick="openMSpesa()">+ Nuova spesa</button>
+    </div>
+  </div>
+  <div class="pscroll"><div class="pcont">
+
+    <!-- KPI spese -->
+    <div class="kgrid" id="sp-kpi" style="margin-bottom:16px"></div>
+
+    <!-- Grafico mensile + donut categoria -->
+    <div class="g2" style="margin-bottom:16px">
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Andamento mensile spese</div>
+        <div id="sp-ch-monthly" style="height:200px"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Per categoria</div>
+        <div id="sp-ch-donut" style="height:200px;display:flex;align-items:center;gap:14px"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">📂 Importa da estratto conto</div>
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:6px">Carica il tuo estratto conto: il sistema <strong style="color:var(--ac2)">separa automaticamente</strong> le voci in tre gruppi:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:11px">
+        <div style="background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:var(--r);padding:8px 10px">
+          <div style="font-weight:600;color:var(--red);margin-bottom:3px">💸 Spese generali</div>
+          <div style="color:var(--tx3)">Utenze, stipendi, affitto, tasse, spese varie → sezione Spese Generali</div>
+        </div>
+        <div style="background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:var(--r);padding:8px 10px">
+          <div style="font-weight:600;color:var(--ac2);margin-bottom:3px">🏦 Anticipi fatture</div>
+          <div style="color:var(--tx3)">SBF, anticipi, scarichi, commissioni e interessi → sezione Anticipi nel Conto Economico</div>
+        </div>
+        <div style="background:rgba(100,116,139,.07);border:1px solid rgba(100,116,139,.2);border-radius:var(--r);padding:8px 10px">
+          <div style="font-weight:600;color:var(--tx3);margin-bottom:3px">⏭ Ignorati</div>
+          <div style="color:var(--tx3)">Bonifici a fornitori, accrediti clienti, movimenti non classificabili</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <label class="btn btn-sm" for="sp-file-csv" style="cursor:pointer">📊 CSV / XLSX</label>
+        <input type="file" id="sp-file-csv" accept=".csv,.xlsx,.xls" onchange="importSpeseFile(this.files)" style="display:none">
+        <label class="btn btn-sm" for="sp-file-pdf" style="cursor:pointer">📄 PDF (AI)</label>
+        <input type="file" id="sp-file-pdf" accept=".pdf" onchange="importSpeseFilePdf(this.files)" style="display:none">
+      </div>
+    </div>
+
+    <!-- Tabella spese -->
+    <div class="tcard">
+      <div class="twrap">
+        <table>
+          <thead><tr>
+            <th>Data</th><th>Descrizione</th><th>Categoria</th>
+            <th>Importo</th><th>Ricorrente</th><th>Note</th><th></th>
+          </tr></thead>
+          <tbody id="tb-spese"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+<!-- /SPESE GENERALI -->
+
+<!-- ANTICIPO FATTURE -->
+<div id="page-anticipi" class="page hidden">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="sbToggle()">☰</button>
+      <div class="ptitle">🏦 Anticipo Fatture</div>
+    </div>
+    <div class="tbar-r">
+      <button class="btn btn-sm" onclick="importAnticipiFomEstratto()" style="color:var(--tx2)">📂 Da estratto conto</button>
+      <button class="btn btn-sm" onclick="exportAnticipiXlsx()">📗 XLSX</button>
+      <button class="btn btn-p btn-sm" onclick="openMAnticipo()">+ Nuovo movimento</button>
+    </div>
+  </div>
+  <div class="pscroll"><div class="pcont">
+
+    <!-- Configurazione castelletto -->
+    <div style="background:var(--bg2);border:1px solid rgba(56,189,248,.25);border-radius:var(--r2);padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;color:var(--ac2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">⚙️ Castelletto bancario</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 120px;gap:10px;align-items:end">
+        <div>
+          <label class="fl2">IMPORTO CASTELLETTO (€)</label>
+          <input type="number" id="cast-importo" style="width:100%" step="1000" placeholder="es. 100000" oninput="saveCastelletto()">
+        </div>
+        <div>
+          <label class="fl2">TIPO</label>
+          <select id="cast-tipo" style="width:100%" onchange="saveCastelletto()">
+            <option value="fisso">Importo fisso</option>
+            <option value="percentuale">% sul fatturato anticipabile</option>
+          </select>
+        </div>
+        <div>
+          <label class="fl2">% MAX ANTICIPO</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" id="cast-pct" style="width:70px" min="0" max="100" value="80" oninput="saveCastelletto()">
+            <span style="font-size:12px;color:var(--tx3)">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI castelletto -->
+    <div id="cast-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px"></div>
+
+    <!-- Barra utilizzo -->
+    <div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--r2);padding:16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:8px">
+        <span>Utilizzo castelletto</span>
+        <span id="cast-pct-label" style="color:var(--ac2)">0%</span>
+      </div>
+      <div style="background:var(--bg4);border-radius:6px;height:12px;overflow:hidden">
+        <div id="cast-bar" style="height:100%;border-radius:6px;transition:width .4s;background:linear-gradient(90deg,var(--ac),var(--teal));width:0%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);margin-top:6px">
+        <span id="cast-used-label">Utilizzato: —</span>
+        <span id="cast-avail-label">Disponibile: —</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;background:var(--bg3);border-radius:var(--r);padding:3px;margin-bottom:12px;width:fit-content">
+      <button class="tab-btn active" id="at-tab-tutti"    onclick="switchAnticipiTab('tutti')">Tutti</button>
+      <button class="tab-btn"        id="at-tab-anticipi" onclick="switchAnticipiTab('anticipi')">💰 Anticipi</button>
+      <button class="tab-btn"        id="at-tab-scarichi" onclick="switchAnticipiTab('scarichi')">✅ Scarichi</button>
+      <button class="tab-btn"        id="at-tab-costi"    onclick="switchAnticipiTab('costi')">💸 Comm./Interessi</button>
+    </div>
+
+    <!-- Tabella -->
+    <div class="tcard" style="border-color:rgba(56,189,248,.15)">
+      <div class="twrap">
+        <table>
+          <thead><tr>
+            <th>Data</th><th>Tipo</th><th>Fattura collegata</th>
+            <th>Importo anticipo</th><th>Importo movimento</th><th>Stato</th><th>Note</th><th></th>
+          </tr></thead>
+          <tbody id="tb-anticipi"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+<!-- /ANTICIPO FATTURE -->
+
+<!-- CONTO ECONOMICO -->
+<div id="page-contoeconomico" class="page hidden">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="sbToggle()">☰</button>
+      <div class="ptitle">📉 Conto Economico</div>
+    </div>
+    <div class="tbar-r">
+      <select id="ce-yr" onchange="rContoEconomico()" style="font-size:12px"></select>
+      <button class="btn btn-sm" onclick="exportCEXlsx()">📗 XLSX</button>
+      <button class="btn btn-p btn-sm" onclick="exportCEPdf()">📄 PDF</button>
+      <button class="btn btn-sm" onclick="resetContoEconomico()" style="color:var(--red);border-color:rgba(248,113,113,.4)">🗑 Reset dati</button>
+    </div>
+  </div>
+  <div class="pscroll"><div class="pcont">
+
+    <!-- Saldo finale hero -->
+    <div id="ce-hero" style="background:linear-gradient(135deg,var(--bg3),var(--bg4));border:1px solid var(--br2);border-radius:var(--r2);padding:22px 26px;margin-bottom:16px"></div>
+
+    <!-- Righe conto economico -->
+    <div class="g2" style="margin-bottom:16px">
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:14px">▲ RICAVI</div>
+        <div id="ce-ricavi"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:14px">▼ COSTI</div>
+        <div id="ce-costi"></div>
+      </div>
+    </div>
+
+    <!-- Grafico confronto mensile -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:13px;font-weight:700">📈 Andamento mensile — Ricavi / Costi / Margine</div>
+        <div style="display:flex;gap:14px;font-size:11px;color:var(--tx3)">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(52,211,153,.8);margin-right:4px"></span>Ricavi</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(248,113,113,.8);margin-right:4px"></span>Costi</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(79,128,240,.8);margin-right:4px"></span>Margine</span>
+        </div>
+      </div>
+      <div id="ce-ch-mensile" style="height:240px"></div>
+    </div>
+
+    <!-- Dettaglio mensile -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:14px">📋 Dettaglio per mese</div>
+      <div class="twrap">
+        <table>
+          <thead><tr>
+            <th>Mese</th><th>Ricavi clienti</th><th>Acquisti fornitori</th>
+            <th>Spese generali</th><th>Totale costi</th><th>Margine</th><th>%</th>
+          </tr></thead>
+          <tbody id="ce-tb-mensile"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Link alla sezione anticipi -->
+    <div style="background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(56,189,248,.03));border:1px solid rgba(56,189,248,.25);border-radius:var(--r2);padding:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--ac2)">🏦 Anticipo Fatture & Castelletto</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:3px">Gestisci anticipi, scarichi, commissioni e disponibilità del castelletto nella sezione dedicata</div>
+        <div id="ce-anticip-summary" style="margin-top:8px;font-size:12px;color:var(--tx2)"></div>
+      </div>
+      <button class="btn btn-sm" onclick="nav('anticipi')" style="color:var(--ac2);border-color:rgba(56,189,248,.4);flex-shrink:0">
+        Vai agli Anticipi →
+      </button>
+    </div>
+
+  </div></div>
+</div>
+<!-- /CONTO ECONOMICO -->
+
 </main>
+</div>
+
+<!-- MODAL NUOVO ANTICIPO -->
+<div id="m-anticipo" class="mover hidden">
+  <div class="modal" style="width:500px">
+    <div class="mtitle" id="m-anticipo-title">🏦 Nuovo Movimento Anticipo</div>
+    <div class="g2">
+      <div class="fg"><label class="fl2">DATA *</label><input type="date" id="na2-dt" style="width:100%"></div>
+      <div class="fg"><label class="fl2">TIPO MOVIMENTO *</label>
+        <select id="na2-tipo" style="width:100%" onchange="onAnticipoTipoChange()">
+          <option value="anticipo">💰 Anticipo fattura</option>
+          <option value="scarico">✅ Scarico anticipo</option>
+          <option value="commissione">💸 Commissione bancaria</option>
+          <option value="interessi">📈 Interessi maturati</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" id="na2-fattura-row">
+      <label class="fl2">FATTURA CLIENTE COLLEGATA</label>
+      <select id="na2-fatid" style="width:100%">
+        <option value="">— Seleziona fattura —</option>
+      </select>
+    </div>
+    <div class="g2">
+      <div class="fg"><label class="fl2" id="na2-imp-lbl">IMPORTO ANTICIPATO *</label>
+        <input type="number" id="na2-imp" style="width:100%" step="0.01" placeholder="0.00" oninput="onAnticipoImpChange()">
+      </div>
+      <div class="fg" id="na2-mov-row">
+        <label class="fl2">IMPORTO RICEVUTO DALLA BANCA</label>
+        <input type="number" id="na2-mov" style="width:100%" step="0.01" placeholder="(uguale se non specificato)">
+      </div>
+    </div>
+    <div class="fg"><label class="fl2">NOTE</label><textarea id="na2-nt" style="width:100%" rows="2" placeholder="Riferimento banca, numero pratica…"></textarea></div>
+    <div id="na2-info" style="font-size:11px;color:var(--ac2);background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:var(--r);padding:8px 12px;display:none"></div>
+    <div class="mact">
+      <button class="btn" onclick="closeM('m-anticipo')">Annulla</button>
+      <button class="btn btn-p" onclick="saveMAnticipo()" style="background:var(--ac);border-color:var(--ac)">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUOVA SPESA -->
+<div id="m-spesa" class="mover hidden">
+  <div class="modal" style="width:500px">
+    <div class="mtitle" id="m-spesa-title">💸 Nuova Spesa Generale</div>
+    <div class="g2">
+      <div class="fg"><label class="fl2">DATA *</label><input type="date" id="ns-dt" style="width:100%"></div>
+      <div class="fg"><label class="fl2">IMPORTO *</label><input type="number" id="ns-imp" style="width:100%" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="fg"><label class="fl2">DESCRIZIONE *</label><input type="text" id="ns-desc" style="width:100%" placeholder="es. Bolletta luce gennaio"></div>
+    <div class="g2">
+      <div class="fg"><label class="fl2">CATEGORIA *</label>
+        <select id="ns-cat" style="width:100%">
+          <option value="stipendi">👥 Stipendi e contributi</option>
+          <option value="utenze">💡 Utenze (luce, gas, acqua, internet)</option>
+          <option value="affitto">🏠 Affitto / leasing</option>
+          <option value="banca">🏦 Spese bancarie e interessi</option>
+          <option value="tasse">📋 Tasse e imposte</option>
+          <option value="varie">📦 Spese varie / altro</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl2">RICORRENTE</label>
+        <select id="ns-ric" style="width:100%">
+          <option value="">No</option>
+          <option value="mensile">Mensile</option>
+          <option value="trimestrale">Trimestrale</option>
+          <option value="annuale">Annuale</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl2">NOTE</label><textarea id="ns-nt" style="width:100%" rows="2" placeholder="Fornitore, riferimento, ecc."></textarea></div>
+    <div class="mact">
+      <button class="btn" onclick="closeM('m-spesa')">Annulla</button>
+      <button class="btn btn-p" onclick="saveMSpesa()" id="ns-save-btn">Salva</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL FATTURA -->
@@ -1464,6 +1948,18 @@ let FAT_CLIENTI = [
 
 let OVERDUE_ALERTS = []; // alert scadenze in ritardo (clienti + fornitori)
 
+// ── SPESE GENERALI ──────────────────────────────────────────────────────────
+let SPESE = []; // {id, dt, desc, cat, imp, ric, nt, fonte}
+// Categorie spese
+const SPESE_CAT = {
+  stipendi: {label:'Stipendi e contributi', ic:'👥', col:'#818cf8'},
+  utenze:   {label:'Utenze',                ic:'💡', col:'#fbbf24'},
+  affitto:  {label:'Affitto / leasing',     ic:'🏠', col:'#fb923c'},
+  banca:    {label:'Spese bancarie',         ic:'🏦', col:'#38bdf8'},
+  tasse:    {label:'Tasse e imposte',        ic:'📋', col:'#f87171'},
+  varie:    {label:'Spese varie',            ic:'📦', col:'#94a3b8'},
+};
+
 let selF=null, selCli=null, selA=null, newCC_col='#4f80f0';
 
 // Articoli creati manualmente o da XML (con codice articolo univoco)
@@ -1479,8 +1975,10 @@ let ARTICOLI_EXTRA = [
   {codice:'SKFX-001', desc:'Shopper kraft 500pz',   fo:'Packaging Solutions Srl',cc:'packaging',prz:0.80,um:'pz',  nt:'',  manual:false, createdAt:'2024-01-25'},
 ];
 
-// Staging per import XML in revisione
-let xmlPending = null;
+// ── ANTICIPO FATTURE & CASTELLETTO ──────────────────────────────────────────
+let ANTICIPI = []; // {id, dt, tipo, fatId, imp, mov, nt}
+// tipo: 'anticipo' | 'scarico' | 'commissione' | 'interessi'
+let CASTELLETTO = { importo: 0, tipo: 'fisso', pct: 80 };
 
 // Log variazioni di prezzo
 let PRICE_ALERTS = [
@@ -1589,7 +2087,7 @@ function nav(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
   document.querySelectorAll('.ni').forEach(x=>x.classList.toggle('active',x.dataset.p===p));
   document.getElementById('page-'+p).classList.remove('hidden');
-  const fn={dashboard:rDash,fatture:rFat,articoli:rArt,fornitori:rForn,centricosto:rCC,report:rReport,clienti:rCli,banca:()=>{},dashclienti:rDashClienti};
+  const fn={dashboard:rDash,fatture:rFat,articoli:rArt,fornitori:rDashFornitori,centricosto:rCC,report:rReport,clienti:rCli,banca:()=>{},dashclienti:rDashClienti,spese:rSpese,anticipi:rAnticipiBars,contoeconomico:rContoEconomico};
   if(fn[p]) fn[p]();
 }
 
@@ -1683,16 +2181,16 @@ function showXmlReview(xml, fname){
         <input type="checkbox" class="xml-chk" id="xl-chk-${i}" checked>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            ${known?`<span class="art-code">${known.codice}</span>`:''}
+            ${known?'<span class="art-code">'+known.codice+'</span>':''}
             <span class="xml-line-desc" title="${l.d}">${l.d}</span>
           </div>
-          ${priceInfo?`<div style="margin-top:3px">${priceInfo}</div>`:''}
+          ${priceInfo?'<div style="margin-top:3px">'+priceInfo+'</div>':''}
         </div>
         <div class="xml-line-price">${fmtE(l.q*l.p)}</div>
         <select id="xl-cc-${i}" style="font-size:11px;padding:3px 6px;min-width:130px">
-          ${CC.map(c=>`<option value="${c.id}"${c.id===selCc?' selected':''}>${c.ic} ${c.n}</option>`).join('')}
+          ${CC.map(c=>'<option value="'+c.id+'"'+(c.id===selCc?' selected':'')+'>'+c.ic+' '+c.n+'</option>').join('')}
         </select>
-        <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${known?`<span style="color:var(--green)">✓ ${known.codice}</span>`:'<span style="color:var(--amber)">nuovo</span>'}</span>`;
+        <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${known?'<span style="color:var(--green)">✓ '+known.codice+'</span>':'<span style="color:var(--amber)">nuovo</span>'}</span>`;
       llist.appendChild(div);
     });
 
@@ -2164,92 +2662,256 @@ function mkStackedBar(container, labels, datasets, h=220){
 }
 
 // ══════════════════════════════════════════
-// DASHBOARD
+// PANORAMICA (nuova dashboard)
 // ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// FILTRO DATA DASHBOARD
+// ══════════════════════════════════════════
+
+// Popola le option anno nei select delle dashboard
+function popDashYears(prefix, data1, data2){
+  const sel=document.getElementById(prefix+'-yr'); if(!sel) return;
+  const cur=sel.value;
+  const years=[...new Set([...data1,...data2].map(f=>f.dt?.slice(0,4)).filter(Boolean))].sort().reverse();
+  sel.innerHTML='<option value="">Tutti gli anni</option>';
+  years.forEach(y=>{ const o=document.createElement('option');o.value=y;o.textContent=y;sel.appendChild(o); });
+  if(years.includes(cur)) sel.value=cur;
+}
+
+// Restituisce funzione filtro data per un prefisso (legge anno e mese dai select)
+function getDashFilter(prefix){
+  const yr=document.getElementById(prefix+'-yr')?.value||'';
+  const mo=document.getElementById(prefix+'-mo')?.value||'';
+  const prefix2=yr+(mo?'-'+mo:'');
+  return f=>{
+    if(!f.dt) return true;
+    if(yr&&!f.dt.startsWith(yr)) return false;
+    if(mo&&f.dt.slice(5,7)!==mo) return false;
+    return true;
+  };
+}
+
+// Label periodo selezionato
+function getDashPeriodLabel(prefix){
+  const yr=document.getElementById(prefix+'-yr')?.value||'';
+  const mo=document.getElementById(prefix+'-mo')?.value||'';
+  const mesi=['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  if(mo&&yr) return mesi[parseInt(mo)]+' '+yr;
+  if(yr) return yr;
+  if(mo) return mesi[parseInt(mo)]+' (tutti gli anni)';
+  return 'Totale complessivo';
+}
+
+function resetDashFilter(prefix){
+  const yr=document.getElementById(prefix+'-yr'); if(yr) yr.value='';
+  const mo=document.getElementById(prefix+'-mo'); if(mo) mo.value='';
+  if(prefix==='dash') rDash();
+  else if(prefix==='forn') rDashFornitori();
+  else if(prefix==='cli') rDashClienti();
+}
+
 function rDash(){
   popSels();
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+
   const dd=document.getElementById('dd-date');
   if(dd) dd.textContent=new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-  const y24=FAT.filter(f=>f.dt.startsWith('2024'));
-  const totAnno=y24.reduce((s,f)=>s+f.imp,0);
-  const daPag=FAT.filter(f=>f.sta==='da_pagare').reduce((s,f)=>s+f.imp,0);
-  const scad=FAT.filter(f=>f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
-  const pagMese=FAT.filter(f=>f.sta==='pagata'&&f.dpag&&f.dpag.startsWith('2024-02')).reduce((s,f)=>s+f.imp,0);
+  // Popola anni e leggi filtro
+  popDashYears('dash', FAT, FAT_CLIENTI);
+  const flt=getDashFilter('dash');
+  const periodLabel=getDashPeriodLabel('dash');
 
-  const kpis=[
-    {l:'Fatturato 2024',v:fmtE(totAnno),s:'Tutte le fatture',ic:'📈',col:'var(--ac)'},
-    {l:'Da pagare',v:fmtE(daPag),s:FAT.filter(f=>f.sta==='da_pagare').length+' fatture aperte',ic:'⏳',col:'var(--amber)'},
-    {l:'Scadute',v:fmtE(scad),s:FAT.filter(f=>f.sta==='scaduta').length+' urgenti',ic:'⚠️',col:'var(--red)'},
-    {l:'Pagate (Feb)',v:fmtE(pagMese),s:'Mese corrente',ic:'✓',col:'var(--green)'},
-  ];
-  const kg=document.getElementById('kgrid');
-  if(kg) kg.innerHTML=kpis.map(k=>`
-    <div class="kcard" style="--kc:${k.col}">
-      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${k.col};border-radius:14px 14px 0 0"></div>
-      <div class="kcard-ico">${k.ic}</div>
-      <div class="kcard-lbl">${k.l}</div>
-      <div class="kcard-val" style="color:${k.col}">${k.v}</div>
-      <div class="kcard-sub">${k.s}</div>
-    </div>`).join('');
+  const fatF  = FAT.filter(flt);
+  const cliF  = FAT_CLIENTI.filter(flt);
+  const spF   = speseCE('').filter(flt);
 
-  // Monthly chart
-  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  const md=Array(12).fill(0);
-  y24.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) md[m]+=f.imp; });
-  const cm=document.getElementById('ch-monthly');
-  if(cm) setTimeout(()=>mkBarChart(cm,months,md,'rgba(79,128,240,.75)',220),10);
+  const now=new Date();
 
-  // Donut
-  const ccTot={};
-  FAT.forEach(f=>{ const k=f.cc||'altro'; ccTot[k]=(ccTot[k]||0)+f.imp; });
-  const sorted=Object.entries(ccTot).sort((a,b)=>b[1]-a[1]);
-  const dlbls=sorted.map(([k])=>{ const c=ccObj(k); return c?c.ic+' '+c.n:k; });
-  const dvals=sorted.map(([,v])=>v);
-  const dcols=sorted.map(([k])=>{ const c=ccObj(k); return c?c.c:'#555'; });
-  const cd=document.getElementById('ch-donut');
-  if(cd) setTimeout(()=>{ cd.innerHTML=mkDonut(cd,dlbls,dvals,dcols,160); },10);
+  // ── Dati fornitori ──────────────────────
+  const fTot   = fatF.reduce((s,f)=>s+f.imp,0);
+  const fPag   = fatF.filter(f=>f.sta==='pagata').reduce((s,f)=>s+f.imp,0);
+  const fDap   = fatF.filter(f=>f.sta==='da_pagare').reduce((s,f)=>s+f.imp,0);
+  const fSc    = fatF.filter(f=>f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const fPct   = fTot>0?Math.round(fPag/fTot*100):0;
 
-  // Recent
-  const dr=document.getElementById('d-recent');
-  if(dr) dr.innerHTML=FAT.slice(0,6).map(f=>`
-    <tr onclick="nav('fatture')">
-      <td style="font-size:11px;color:var(--tx3);font-family:monospace">${f.num}</td>
-      <td style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.fo}</td>
-      <td style="font-family:monospace;font-size:12px">${fmtE(f.imp)}</td>
-      <td>${bSta(f.sta)}</td>
-    </tr>`).join('');
+  // ── Dati spese generali ─────────────────
+  const spTot  = spF.reduce((s,x)=>s+x.imp,0);
 
-  // Scadenze
-  const ds=document.getElementById('d-scad');
-  if(ds){
-    const now=new Date();
-    // Expand per-scadenza so each rate shows separately
-    const allScs=[];
-    FAT.forEach(f=>{
-      const scs=getFatScadenze(f);
-      if(scs.length){
-        scs.filter(s=>s.sta!=='pagata'&&s.data).forEach(s=>{
-          allScs.push({...f,_sc:s.data,_imp:s.imp||f.imp,_nt:s.nt,diff:Math.floor((new Date(s.data)-now)/86400000)});
-        });
-      } else if(f.sc && f.sta!=='pagata'){
-        allScs.push({...f,_sc:f.sc,_imp:f.imp,_nt:'',diff:Math.floor((new Date(f.sc)-now)/86400000)});
-      }
-    });
-    const urgent=allScs.filter(f=>f.diff<=14).sort((a,b)=>a.diff-b.diff);
-    if(!urgent.length){ ds.innerHTML='<div class="empty"><div class="empty-ico">✅</div><div style="font-size:13px">Nessuna scadenza critica</div></div>'; return; }
-    ds.innerHTML=urgent.slice(0,8).map(f=>`
-      <div class="sr">
-        <div>
-          <div style="font-size:12px;font-weight:500">${f.fo}</div>
-          <div style="font-size:11px;color:var(--tx3);font-family:monospace">${f.num}${f._nt?' · '+f._nt:''}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-family:monospace;font-size:12px">${fmtE(f._imp)}</div>
-          <div style="font-size:11px;color:${f.diff<0?'var(--red)':'var(--amber)'}">${f.diff<0?'Scad. '+Math.abs(f.diff)+'gg fa':'Fra '+f.diff+' gg'}</div>
-        </div>
-      </div>`).join('');
+  // ── Dati clienti ────────────────────────
+  const cTot   = cliF.reduce((s,f)=>s+f.imp,0);
+  const cInc   = cliF.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const cDai   = cliF.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
+  const cRit   = cliF.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const cPct   = cTot>0?Math.round(cInc/cTot*100):0;
+
+  // ── HERO: saldo netto (incassi − spese fornitori − spese generali) ──────
+  const saldo  = cInc - fPag - spTot;
+  const heroEl = document.getElementById('hero-saldo');
+  const heroSub= document.getElementById('hero-sub');
+  const heroInc= document.getElementById('hero-inc');
+  const heroOut= document.getElementById('hero-out');
+  const heroScad=document.getElementById('hero-scad');
+
+  if(heroEl){
+    heroEl.textContent = fmtE(Math.abs(saldo));
+    heroEl.style.color = saldo>=0?'var(--green)':'var(--red)';
   }
+  if(heroSub) heroSub.textContent = (periodLabel!=='Totale complessivo'?'📅 '+periodLabel+' — ':'') +
+    (saldo>=0 ? '↑ Entrate superiori a uscite + spese generali' : '↓ Uscite totali superiori alle entrate');
+
+  if(heroInc) heroInc.textContent = fmtE(cInc);
+  if(heroOut) heroOut.textContent = fmtE(fPag + spTot);
+
+  // Scadenze urgenti prossimi 30gg — sempre su tutto, non filtrate per data
+  let scad30=0;
+  FAT.forEach(f=>{
+    getFatScadenze(f).filter(s=>s.sta!=='pagata'&&s.data).forEach(s=>{
+      const d=Math.floor((new Date(s.data)-now)/86400000);
+      if(d>=0&&d<=30) scad30+=(s.imp||f.imp);
+    });
+    if((!f.scadenze||!f.scadenze.length)&&f.sc&&f.sta!=='pagata'){
+      const d=Math.floor((new Date(f.sc)-now)/86400000);
+      if(d>=0&&d<=30) scad30+=f.imp;
+    }
+  });
+  FAT_CLIENTI.forEach(f=>{
+    (f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).forEach(s=>{
+      const d=Math.floor((new Date(s.data)-now)/86400000);
+      if(d>=0&&d<=30) scad30+=(s.imp||f.imp);
+    });
+  });
+  if(heroScad) heroScad.textContent = fmtE(scad30);
+
+  // ── KPI Fornitori ───────────────────────
+  const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+  set('pf-tot', fmtE(fTot));
+  set('pf-pag', fmtE(fPag));
+  set('pf-dap', fmtE(fDap));
+  set('pf-sc',  fmtE(fSc));
+  set('pf-pct', fPct);
+  const pfBar=document.getElementById('pf-pbar');
+  if(pfBar) pfBar.style.width=fPct+'%';
+
+  // Top 3 fornitori per importo (filtrati)
+  const fMap={};
+  fatF.forEach(f=>{ fMap[f.fo]=(fMap[f.fo]||0)+f.imp; });
+  const topForn=Object.entries(fMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const maxForn=topForn[0]?.[1]||1;
+  const pfTop=document.getElementById('pf-top');
+  if(pfTop) pfTop.innerHTML=topForn.map(([fo,v])=>{
+    const col=avatarCol(fo);
+    const pct=Math.round(v/maxForn*100);
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <div style="width:26px;height:26px;border-radius:6px;background:${col}22;color:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${initials(fo)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fo}</div>
+        <div class="pbar-w" style="margin-top:3px"><div class="pbar" style="width:${pct}%;background:${col}"></div></div>
+      </div>
+      <div style="font-family:monospace;font-size:11px;color:var(--tx2);flex-shrink:0">${fmtE(v)}</div>
+    </div>`;
+  }).join('');
+
+  // ── KPI Clienti ─────────────────────────
+  set('pc-tot', fmtE(cTot));
+  set('pc-inc', fmtE(cInc));
+  set('pc-dai', fmtE(cDai));
+  set('pc-rit', fmtE(cRit));
+  set('pc-pct', cPct);
+  const pcBar=document.getElementById('pc-pbar');
+  if(pcBar) pcBar.style.width=cPct+'%';
+
+  // Top 3 clienti per importo (filtrati)
+  const cMap={};
+  cliF.forEach(f=>{ cMap[f.cli]=(cMap[f.cli]||0)+f.imp; });
+  const topCli=Object.entries(cMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const maxCli=topCli[0]?.[1]||1;
+  const pcTop=document.getElementById('pc-top');
+  if(pcTop) pcTop.innerHTML=topCli.map(([cli,v])=>{
+    const col=avatarCol(cli);
+    const pct=Math.round(v/maxCli*100);
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <div style="width:26px;height:26px;border-radius:6px;background:${col}22;color:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${initials(cli)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cli}</div>
+        <div class="pbar-w" style="margin-top:3px"><div class="pbar" style="width:${pct}%;background:${col}"></div></div>
+      </div>
+      <div style="font-family:monospace;font-size:11px;color:var(--tx2);flex-shrink:0">${fmtE(v)}</div>
+    </div>`;
+  }).join('');
+
+  // ── Grafico confronto mensile (filtrato) ─
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const mForn=Array(12).fill(0);
+  const mCli =Array(12).fill(0);
+  fatF.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mForn[m]+=f.imp; });
+  cliF.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mCli[m]+=f.imp; });
+  const cc=document.getElementById('ch-confronto');
+  if(cc) setTimeout(()=>mkStackedBar(cc, months,
+    [{label:'Incassi clienti', data:mCli,  color:'rgba(45,212,191,.7)'},
+     {label:'Spese fornitori', data:mForn, color:'rgba(167,139,250,.7)'}], 230), 10);
+
+  // ── Donut globale (filtrato) ────────────
+  const gd=document.getElementById('ch-global-donut');
+  if(gd) setTimeout(()=>{
+    gd.innerHTML=mkDonut(gd,
+      ['Incassato','Da incassare','In ritardo','Pagato forn.','Da pagare forn.','Scaduto forn.','Spese gen.'],
+      [cInc, cDai, cRit, fPag, fDap, fSc, spTot],
+      ['#2dd4bf','#fbbf24','#f87171','#34d399','#fb923c','#f43f5e','#a78bfa'],
+      170);
+  },10);
+
+  // ── Scadenze urgenti (sempre globali, non filtrate per data) ────────────
+  const allUrgent=[];
+  FAT.forEach(f=>{
+    const scs=getFatScadenze(f);
+    if(scs.length){
+      scs.filter(s=>s.sta!=='pagata'&&s.data).forEach(s=>{
+        const d=Math.floor((new Date(s.data)-now)/86400000);
+        if(d<=30) allUrgent.push({tipo:'fornitore',nome:f.fo,num:f.num,imp:s.imp||f.imp,diff:d,sta:f.sta});
+      });
+    } else if(f.sc&&f.sta!=='pagata'){
+      const d=Math.floor((new Date(f.sc)-now)/86400000);
+      if(d<=30) allUrgent.push({tipo:'fornitore',nome:f.fo,num:f.num,imp:f.imp,diff:d,sta:f.sta});
+    }
+  });
+  FAT_CLIENTI.forEach(f=>{
+    (f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).forEach(s=>{
+      const d=Math.floor((new Date(s.data)-now)/86400000);
+      if(d<=30) allUrgent.push({tipo:'cliente',nome:f.cli,num:f.num,imp:s.imp||f.imp,diff:d,sta:f.sta});
+    });
+  });
+  allUrgent.sort((a,b)=>a.diff-b.diff);
+
+  const ds=document.getElementById('d-scad-new');
+  if(ds){
+    if(!allUrgent.length){
+      ds.innerHTML='<div class="empty"><div class="empty-ico">✅</div><div style="font-size:13px">Nessuna scadenza nei prossimi 30 giorni</div></div>';
+    } else {
+      ds.innerHTML=allUrgent.slice(0,10).map(r=>{
+        const isFor = r.tipo==='fornitore';
+        const col   = r.diff<0?'var(--red)':r.diff<=7?'var(--amber)':'var(--tx3)';
+        const ggTxt = r.diff<0?`${Math.abs(r.diff)}gg fa`:r.diff===0?'Oggi':`${r.diff}gg`;
+        const badge = isFor
+          ? `<span style="font-size:9px;background:rgba(167,139,250,.12);color:var(--violet);border:1px solid rgba(167,139,250,.2);padding:1px 6px;border-radius:10px">🏭 Forn.</span>`
+          : `<span style="font-size:9px;background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.2);padding:1px 6px;border-radius:10px">👥 Cli.</span>`;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--br);gap:8px">
+          <div style="display:flex;align-items:center;gap:7px;min-width:0">
+            ${badge}
+            <div style="min-width:0">
+              <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${r.nome}</div>
+              <div style="font-size:10px;color:var(--tx3);font-family:monospace">${r.num}</div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:monospace;font-size:12px;font-weight:600">${fmtE(r.imp)}</div>
+            <div style="font-size:10px;font-weight:600;color:${col}">${ggTxt}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
   updBadge();
 }
 
@@ -2280,6 +2942,10 @@ function rFat(){
 
   const fc=document.getElementById('fcount');
   if(fc) fc.textContent=data.length+' risultati · '+fmtE(data.reduce((s,f)=>s+f.imp,0));
+  // Mostra badge "filtrato" vicino ai bottoni export se ci sono filtri attivi
+  const isFilteredFat = !!(fo||st||d1||d2||cc||q);
+  const fatHint=document.getElementById('fat-export-hint');
+  if(fatHint) fatHint.style.display=isFilteredFat?'inline':'none';
 
   const tb=document.getElementById('tb-fat');
   if(!tb) return;
@@ -2795,24 +3461,62 @@ function delArtExtra(codice){
 }
 
 // ══════════════════════════════════════════
-// FORNITORI
+// DASHBOARD FORNITORI
 // ══════════════════════════════════════════
-function rForn(){
-  const g=document.getElementById('fgrid');
-  if(!g) return;
-  const m={};
-  FAT.forEach(f=>{ if(!m[f.fo]) m[f.fo]={fo:f.fo,piva:f.piva,list:[],tot:0}; m[f.fo].list.push(f); m[f.fo].tot+=f.imp; });
+function rDashFornitori(){
+  // Popola anni e leggi filtro
+  popDashYears('forn', FAT, []);
+  const flt=getDashFilter('forn');
+  const periodLabel=getDashPeriodLabel('forn');
+  const fatF=FAT.filter(flt);
+
+  // ── KPI ─────────────────────────────────
+  const tot      = fatF.reduce((s,f)=>s+f.imp,0);
+  const pagato   = fatF.filter(f=>f.sta==='pagata').reduce((s,f)=>s+f.imp,0);
+  const daPagare = fatF.filter(f=>f.sta==='da_pagare').reduce((s,f)=>s+f.imp,0);
+  const scaduto  = fatF.filter(f=>f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const nScaduto = fatF.filter(f=>f.sta==='scaduta').length;
+
+  const kpiEl = document.getElementById('df-kpi');
+  if(kpiEl) kpiEl.innerHTML=[
+    {l:'Totale acquistato',v:fmtE(tot),ic:'📈',c:'--ac'},
+    {l:'Pagato',v:fmtE(pagato),ic:'✅',c:'--green'},
+    {l:'Da pagare',v:fmtE(daPagare),ic:'⏳',c:'--amber'},
+    {l:'Scaduto ('+nScaduto+')',v:fmtE(scaduto),ic:'⚠',c:'--red'},
+  ].map(k=>`<div class="kcard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(${k.c})"></div><div class="kcard-ico">${k.ic}</div><div class="kcard-lbl">${k.l}</div><div class="kcard-val" style="color:var(${k.c})">${k.v}</div>${periodLabel!=='Totale complessivo'?'<div class="kcard-sub">📅 '+periodLabel+'</div>':''}</div>`).join('');
+
+  // ── Grafico mensile ─────────────────────
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const mData=Array(12).fill(0);
+  fatF.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mData[m]+=f.imp; });
+  const mc=document.getElementById('df-ch-monthly');
+  if(mc) setTimeout(()=>mkBarChart(mc, months, mData, 'rgba(79,128,240,.75)', 200), 10);
+
+  // ── Donut stato pagamenti ───────────────
+  const dc=document.getElementById('df-ch-donut');
+  if(dc) setTimeout(()=>{ dc.innerHTML=mkDonut(dc,['Pagato','Da pagare','Scaduto'],[pagato,daPagare,scaduto],['#34d399','#fbbf24','#f87171'],160); }, 10);
+
+  // ── Griglia fornitori ───────────────────
+  const g=document.getElementById('fgrid'); if(!g) return;
+  const m2={};
+  fatF.forEach(f=>{
+    if(!m2[f.fo]) m2[f.fo]={fo:f.fo,piva:f.piva,list:[],tot:0};
+    m2[f.fo].list.push(f);
+    m2[f.fo].tot+=f.imp;
+  });
   g.innerHTML='';
-  Object.values(m).sort((a,b)=>b.tot-a.tot).forEach(v=>{
+  Object.values(m2).sort((a,b)=>b.tot-a.tot).forEach(v=>{
     const col=avatarCol(v.fo);
     const pag=v.list.filter(f=>f.sta==='pagata').length;
     const sc=v.list.filter(f=>f.sta==='scaduta').length;
     const ap=v.list.filter(f=>f.sta==='da_pagare').length;
     const totP=v.list.filter(f=>f.sta==='pagata').reduce((s,f)=>s+f.imp,0);
-    const pct=Math.round(totP/v.tot*100);
+    const pct=v.tot>0?Math.round(totP/v.tot*100):0;
     const ccIds=[...new Set(v.list.map(f=>f.cc).filter(Boolean))];
     const card=document.createElement('div');
     card.className='fcard';
+    card.style.cursor='pointer';
+    card.onclick=()=>{ nav('fatture'); setTimeout(()=>{ document.getElementById('ff-fo').value=v.fo; rFat(); },100); };
     card.innerHTML=`
       <div class="fav" style="background:${col}22;color:${col}">${initials(v.fo)}</div>
       <div style="font-weight:600;font-size:14px;margin-bottom:2px">${v.fo}</div>
@@ -2831,11 +3535,513 @@ function rForn(){
       ${ccIds.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:9px">${ccIds.map(id=>ccTag(id)).join('')}</div>`:''}`;
     g.appendChild(card);
   });
+
+  // ── Tabella scadenze fornitori ──────────
+  const now=new Date();
+  const rows=[];
+  fatF.filter(f=>f.sta!=='pagata').forEach(f=>{
+    const scs=getFatScadenze(f);
+    if(scs.length){
+      scs.filter(s=>s.sta!=='pagata'&&s.data).forEach(s=>{
+        const scDate=new Date(s.data);
+        const diff=Math.floor((scDate-now)/86400000);
+        rows.push({...f,_diff:diff,_scDate:scDate,_scImp:s.imp||f.imp,_scNt:s.nt||''});
+      });
+    } else if(f.sc){
+      const scDate=new Date(f.sc);
+      rows.push({...f,_diff:Math.floor((scDate-now)/86400000),_scDate:scDate,_scImp:f.imp,_scNt:''});
+    }
+  });
+  rows.sort((a,b)=>{ if(a._diff===null)return 1; if(b._diff===null)return -1; return a._diff-b._diff; });
+
+  const tEl=document.getElementById('df-scad-table');
+  if(!tEl) return;
+  if(!rows.length){ tEl.innerHTML='<div class="empty"><div class="empty-ico">✅</div><div style="font-size:13px">Nessuna scadenza aperta</div></div>'; return; }
+  tEl.innerHTML=`<div class="tcard"><div class="twrap"><table>
+    <thead><tr><th>Fornitore</th><th>Numero</th><th>Data</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Giorni</th><th>C.Costo</th></tr></thead>
+    <tbody>${rows.map(f=>{
+      const diff=f._diff;
+      const gg=diff===null?'—':diff<0?`<span style="color:var(--red);font-weight:600">${Math.abs(diff)}gg fa</span>`:diff===0?'<span style="color:var(--amber);font-weight:600">Oggi</span>':`${diff}gg`;
+      return `<tr>
+        <td style="font-weight:500;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.fo}${f._scNt?'<br><span style="font-size:10px;color:var(--tx3)">'+f._scNt+'</span>':''}</td>
+        <td style="font-family:monospace;font-size:11px;color:var(--ac)">${f.num}</td>
+        <td style="font-size:12px;color:var(--tx2)">${f.dt}</td>
+        <td style="font-size:12px;color:${diff!==null&&diff<0?'var(--red)':'var(--tx2)'}">${f._scDate?f._scDate.toISOString().split('T')[0]:'—'}</td>
+        <td style="font-family:monospace;font-weight:500">${fmtE(f._scImp)}</td>
+        <td>${bSta(f.sta)}</td>
+        <td>${gg}</td>
+        <td>${ccTag(f.cc)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div></div>`;
 }
 
-// ══════════════════════════════════════════
-// CENTRI DI COSTO
-// ══════════════════════════════════════════
+// Export PDF fornitori
+async function exportFornPdf(){
+  const flt=getDashFilter('forn');
+  const periodLabel=getDashPeriodLabel('forn');
+  const rows=[...FAT.filter(flt)].sort((a,b)=>a.dt.localeCompare(b.dt));
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+
+  const tot=rows.reduce((s,f)=>s+f.imp,0);
+  const pag=rows.filter(f=>f.sta==='pagata').reduce((s,f)=>s+f.imp,0);
+  const dap=rows.filter(f=>f.sta==='da_pagare').reduce((s,f)=>s+f.imp,0);
+  const sc =rows.filter(f=>f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+
+  // Totali imponibile / IVA
+  const totImponibile=rows.reduce((s,f)=>{ const iva=f.iva||22; return s+f.imp/(1+iva/100); },0);
+  const totIva=tot-totImponibile;
+
+  const staLabel=s=>({pagata:'Pagata',da_pagare:'Da pagare',scaduta:'Scaduta'}[s]||s);
+  const e=v=>fmtE(v);
+  const pct=(imp,iva)=>{ const r=iva||22; return (imp/(1+r/100)).toFixed(2); };
+  const ivaAmt=(imp,iva)=>{ const r=iva||22; return (imp-imp/(1+r/100)).toFixed(2); };
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Fatture Fornitori</title>
+<style>
+body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a2e;margin:0;padding:0}
+.header{background:#0f3460;color:#fff;padding:24px 32px}
+.header h1{margin:0 0 4px;font-size:22px;font-weight:800}
+.header p{margin:0;font-size:11px;opacity:.8}
+.period{background:#1e3a5f;color:#93c5fd;padding:6px 32px;font-size:11px;font-weight:600}
+.kpi-row{display:flex;gap:0;background:#f8f9fc;border-bottom:1px solid #e5e7eb}
+.kpi{flex:1;padding:12px 16px;border-right:1px solid #e5e7eb;text-align:center}
+.kpi:last-child{border-right:none}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;font-weight:600;margin-bottom:3px}
+.kpi-val{font-size:16px;font-weight:700;color:#0f3460}
+.kpi-val.green{color:#059669}.kpi-val.amber{color:#d97706}.kpi-val.red{color:#dc2626}.kpi-val.gray{color:#6b7280;font-size:13px}
+.impon-row{display:flex;background:#eff6ff;border-bottom:1px solid #dbeafe;padding:10px 32px;gap:32px;font-size:11px}
+.impon-item{display:flex;flex-direction:column;gap:2px}
+.impon-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#3b82f6;font-weight:600}
+.impon-val{font-weight:700;color:#1e40af;font-size:13px}
+.section{padding:16px 32px}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#374151;margin-bottom:10px;border-bottom:2px solid #e5e7eb;padding-bottom:5px}
+table{width:100%;border-collapse:collapse;font-size:10px}
+thead th{background:#f3f4f6;padding:6px 8px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.4px;font-size:8px;color:#6b7280;border-bottom:2px solid #e5e7eb}
+tbody tr:nth-child(even){background:#fafafa}
+td{padding:5px 8px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.badge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:8px;font-weight:600}
+.badge-pag{background:#d1fae5;color:#065f46}
+.badge-ap{background:#fef3c7;color:#92400e}
+.badge-sc{background:#fee2e2;color:#991b1b}
+.footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:10px 32px;font-size:10px;color:#9ca3af;text-align:center}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div class="header"><h1>🏭 Dashboard Fornitori</h1><p>Generato il ${dateStr} · ${rows.length} fatture · GestFatture Pro</p></div>
+${periodLabel!=='Totale complessivo'?`<div class="period">📅 Periodo: ${periodLabel}</div>`:''}
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-label">Totale acquistato</div><div class="kpi-val">${e(tot)}</div></div>
+  <div class="kpi"><div class="kpi-label">Pagato</div><div class="kpi-val green">${e(pag)}</div></div>
+  <div class="kpi"><div class="kpi-label">Da pagare</div><div class="kpi-val amber">${e(dap)}</div></div>
+  <div class="kpi"><div class="kpi-label">Scaduto</div><div class="kpi-val red">${e(sc)}</div></div>
+</div>
+<div class="impon-row">
+  <div class="impon-item"><div class="impon-lbl">Totale imponibile (IVA esclusa)</div><div class="impon-val">${e(totImponibile)}</div></div>
+  <div class="impon-item"><div class="impon-lbl">Totale IVA</div><div class="impon-val">${e(totIva)}</div></div>
+  <div class="impon-item"><div class="impon-lbl">Totale IVA inclusa</div><div class="impon-val">${e(tot)}</div></div>
+  <div class="impon-item"><div class="impon-lbl">N° fatture</div><div class="impon-val">${rows.length}</div></div>
+</div>
+<div class="section">
+<div class="section-title">Elenco fatture fornitori</div>
+<table><thead><tr>
+  <th>Numero</th><th>Fornitore</th><th>Data</th><th>Scadenza</th>
+  <th>Imponibile</th><th>IVA %</th><th>IVA €</th><th>Totale</th><th>Stato</th><th>C.Costo</th>
+</tr></thead>
+<tbody>${rows.map(f=>{
+  const badgeClass=f.sta==='pagata'?'badge-pag':f.sta==='scaduta'?'badge-sc':'badge-ap';
+  return `<tr>
+    <td style="font-family:monospace;color:#0f3460">${f.num}</td>
+    <td style="font-weight:600">${f.fo}</td>
+    <td>${f.dt}</td>
+    <td style="color:${f.sta==='scaduta'?'#dc2626':'#374151'}">${f.sc||'—'}</td>
+    <td style="font-family:monospace">€ ${pct(f.imp,f.iva)}</td>
+    <td style="text-align:center">${f.iva||22}%</td>
+    <td style="font-family:monospace;color:#6b7280">€ ${ivaAmt(f.imp,f.iva)}</td>
+    <td style="font-family:monospace;font-weight:700">${e(f.imp)}</td>
+    <td><span class="badge ${badgeClass}">${staLabel(f.sta)}</span></td>
+    <td style="color:#6b7280">${ccObj(f.cc)?.n||'—'}</td>
+  </tr>`;
+}).join('')}</tbody></table>
+</div>
+<div class="footer">GestFatture Pro · Fatture Fornitori · ${periodLabel} · ${dateStr}</div>
+</body></html>`;
+
+  const win=window.open('','_blank','width=960,height=720');
+  win.document.write(html); win.document.close();
+  win.onload=()=>{ setTimeout(()=>win.print(),400); };
+  toast('PDF fornitori pronto ('+periodLabel+')');
+}
+
+// Export XLSX fornitori (con filtri e imponibile)
+function exportFornXlsx(){
+  if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
+  const flt=getDashFilter('forn');
+  const periodLabel=getDashPeriodLabel('forn');
+  const rows=[...FAT.filter(flt)].sort((a,b)=>a.dt.localeCompare(b.dt));
+
+  // Sheet 1: riepilogo
+  const tot=rows.reduce((s,f)=>s+f.imp,0);
+  const totImponibile=rows.reduce((s,f)=>s+f.imp/(1+(f.iva||22)/100),0);
+  const riepilogo=[
+    ['RIEPILOGO FORNITORI — '+periodLabel],
+    [],
+    ['Periodo', periodLabel],
+    ['N° fatture', rows.length],
+    [],
+    ['Totale imponibile', parseFloat(totImponibile.toFixed(2))],
+    ['Totale IVA', parseFloat((tot-totImponibile).toFixed(2))],
+    ['Totale IVA inclusa', tot],
+    [],
+    ['Pagato', rows.filter(f=>f.sta==='pagata').reduce((s,f)=>s+f.imp,0)],
+    ['Da pagare', rows.filter(f=>f.sta==='da_pagare').reduce((s,f)=>s+f.imp,0)],
+    ['Scaduto', rows.filter(f=>f.sta==='scaduta').reduce((s,f)=>s+f.imp,0)],
+  ];
+
+  // Sheet 2: dettaglio con imponibile
+  const wsData=[['Numero','Fornitore','P.IVA','Data','Scadenza','Imponibile €','IVA %','IVA €','Totale €','Stato','Data Pagamento','C.Costo','Note']];
+  rows.forEach(f=>{
+    const iva=f.iva||22;
+    const imponibile=parseFloat((f.imp/(1+iva/100)).toFixed(2));
+    const ivaAmt=parseFloat((f.imp-imponibile).toFixed(2));
+    wsData.push([f.num,f.fo,f.piva||'',f.dt,f.sc||'',imponibile,iva,ivaAmt,f.imp||0,f.sta,f.dpag||'',ccObj(f.cc)?.n||'',f.nt||'']);
+  });
+
+  const wb=XLSX.utils.book_new();
+  const wsRiep=XLSX.utils.aoa_to_sheet(riepilogo);
+  wsRiep['!cols']=[{wch:28},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,wsRiep,'Riepilogo');
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols']=[{wch:14},{wch:28},{wch:14},{wch:12},{wch:12},{wch:14},{wch:7},{wch:12},{wch:12},{wch:12},{wch:12},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws,'Fatture Fornitori');
+  XLSX.writeFile(wb,'fornitori_'+periodLabel.replace(/\s/g,'_')+'_'+today()+'.xlsx');
+  toast('XLSX fornitori esportato ('+periodLabel+' · '+rows.length+' fatture)');
+}
+
+// Export CSV fornitori (con filtri)
+function exportFornCsv(){
+  const flt=getDashFilter('forn');
+  const periodLabel=getDashPeriodLabel('forn');
+  const rows=[...FAT.filter(flt)].sort((a,b)=>a.dt.localeCompare(b.dt));
+  const bom='\uFEFF';
+  const header=['Numero','Fornitore','P.IVA','Data','Scadenza','Imponibile EUR','IVA %','IVA EUR','Totale EUR','Stato','Data Pagamento','C.Costo','Note'];
+  const csvRows=[header];
+  rows.forEach(f=>{
+    const iva=f.iva||22;
+    const imponibile=(f.imp/(1+iva/100)).toFixed(2);
+    const ivaAmt=(f.imp-parseFloat(imponibile)).toFixed(2);
+    csvRows.push([f.num,f.fo,f.piva||'',f.dt,f.sc||'',imponibile,iva,ivaAmt,(f.imp||0).toFixed(2),f.sta,f.dpag||'',ccObj(f.cc)?.n||'',(f.nt||'').replace(/,/g,';').replace(/\n/g,' ')]);
+  });
+  const csv=bom+csvRows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='fornitori_'+periodLabel.replace(/\s/g,'_')+'_'+today()+'.csv'; a.click();
+  URL.revokeObjectURL(a.href);
+  toast('CSV fornitori esportato ('+periodLabel+' · '+rows.length+' fatture)');
+}
+
+// ── EXPORT PANORAMICA PDF ──────────────────────────────────────────────────
+function exportPanoramicaPdf(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+
+  // Dati fornitori
+  const fTot = FAT.reduce((s,f)=>s+f.imp,0);
+  const fPag = FAT.filter(f=>f.sta==='pagata').reduce((s,f)=>s+f.imp,0);
+  const fDap = FAT.filter(f=>f.sta==='da_pagare').reduce((s,f)=>s+f.imp,0);
+  const fSc  = FAT.filter(f=>f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const fPct = fTot>0?Math.round(fPag/fTot*100):0;
+
+  // Dati clienti
+  const cTot = FAT_CLIENTI.reduce((s,f)=>s+f.imp,0);
+  const cInc = FAT_CLIENTI.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const cDai = FAT_CLIENTI.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
+  const cRit = FAT_CLIENTI.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const cPct = cTot>0?Math.round(cInc/cTot*100):0;
+  const saldo= cInc - fPag;
+
+  // Top fornitori
+  const fMap={};
+  FAT.forEach(f=>{ fMap[f.fo]=(fMap[f.fo]||0)+f.imp; });
+  const topForn=Object.entries(fMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Top clienti
+  const cMap={};
+  FAT_CLIENTI.forEach(f=>{ cMap[f.cli]=(cMap[f.cli]||0)+f.imp; });
+  const topCli=Object.entries(cMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Scadenze urgenti 30gg
+  const urgent=[];
+  FAT.forEach(f=>{
+    getFatScadenze(f).filter(s=>s.sta!=='pagata'&&s.data).forEach(s=>{
+      const d=Math.floor((new Date(s.data)-now)/86400000);
+      if(d<=30) urgent.push({tipo:'Fornitore',nome:f.fo,num:f.num,imp:s.imp||f.imp,diff:d});
+    });
+    if((!f.scadenze||!f.scadenze.length)&&f.sc&&f.sta!=='pagata'){
+      const d=Math.floor((new Date(f.sc)-now)/86400000);
+      if(d<=30) urgent.push({tipo:'Fornitore',nome:f.fo,num:f.num,imp:f.imp,diff:d});
+    }
+  });
+  FAT_CLIENTI.forEach(f=>{
+    (f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).forEach(s=>{
+      const d=Math.floor((new Date(s.data)-now)/86400000);
+      if(d<=30) urgent.push({tipo:'Cliente',nome:f.cli,num:f.num,imp:s.imp||f.imp,diff:d});
+    });
+  });
+  urgent.sort((a,b)=>a.diff-b.diff);
+
+  const e=v=>`€ ${parseFloat(v||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const bar=(pct,col)=>`<div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%;margin-top:4px"><div style="width:${pct}%;background:${col};height:100%;border-radius:4px"></div></div>`;
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Panoramica GestFatture</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a2e;background:#fff}
+.header{background:linear-gradient(135deg,#0f3460,#1a1a7e);color:#fff;padding:28px 32px}
+.header h1{font-size:24px;font-weight:800;margin-bottom:4px}
+.header p{font-size:11px;opacity:.75}
+.saldo-row{background:#f0f4ff;border-bottom:2px solid #e5e7eb;padding:16px 32px;display:flex;gap:0}
+.saldo-item{flex:1;padding:0 16px;border-right:1px solid #e5e7eb;text-align:center}
+.saldo-item:last-child{border-right:none}
+.saldo-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;font-weight:600;margin-bottom:5px}
+.saldo-val{font-size:20px;font-weight:800}
+.section{padding:20px 32px;border-bottom:1px solid #f3f4f6}
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px}
+.kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600;margin-bottom:4px}
+.kpi-val{font-size:16px;font-weight:700}
+.kpi-val.green{color:#059669}.kpi-val.amber{color:#d97706}.kpi-val.red{color:#dc2626}.kpi-val.blue{color:#2563eb}.kpi-val.teal{color:#0891b2}
+.pbar-w{background:#e5e7eb;border-radius:4px;height:6px;margin-top:6px;overflow:hidden}
+.pbar{height:100%;border-radius:4px}
+.rank-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rank-num{width:20px;height:20px;border-radius:50%;background:#f3f4f6;font-size:10px;font-weight:700;color:#374151;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rank-name{flex:1;font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-val{font-size:11px;font-family:monospace;font-weight:600;color:#374151;flex-shrink:0}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{background:#f3f4f6;padding:7px 10px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.4px;font-size:9px;color:#6b7280;border-bottom:2px solid #e5e7eb}
+tbody tr:nth-child(even){background:#fafafa}
+td{padding:6px 10px;border-bottom:1px solid #f3f4f6}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:600}
+.badge-forn{background:#ede9fe;color:#7c3aed}
+.badge-cli{background:#ccfbf1;color:#0f766e}
+.footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:12px 32px;font-size:10px;color:#9ca3af;text-align:center}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+
+<div class="header">
+  <h1>📊 Panoramica Generale</h1>
+  <p>Generato il ${dateStr} · GestFatture Pro · ${FAT.length} fatture fornitori · ${FAT_CLIENTI.length} fatture clienti</p>
+</div>
+
+<div class="saldo-row">
+  <div class="saldo-item">
+    <div class="saldo-lbl">Saldo Netto (Incassi − Uscite)</div>
+    <div class="saldo-val" style="color:${saldo>=0?'#059669':'#dc2626'}">${e(Math.abs(saldo))} ${saldo>=0?'↑':'↓'}</div>
+  </div>
+  <div class="saldo-item">
+    <div class="saldo-lbl">Incassi clienti</div>
+    <div class="saldo-val" style="color:#0891b2">${e(cInc)}</div>
+  </div>
+  <div class="saldo-item">
+    <div class="saldo-lbl">Spese fornitori</div>
+    <div class="saldo-val" style="color:#7c3aed">${e(fPag)}</div>
+  </div>
+  <div class="saldo-item">
+    <div class="saldo-lbl">Scadenze prossimi 30gg</div>
+    <div class="saldo-val" style="color:#d97706">${e(urgent.reduce((s,r)=>s+r.imp,0))}</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="two-col">
+
+    <!-- FORNITORI -->
+    <div>
+      <div class="section-title" style="color:#7c3aed">🏭 Fornitori</div>
+      <div class="kpi-grid">
+        <div class="kpi-box"><div class="kpi-lbl">Totale acquistato</div><div class="kpi-val blue">${e(fTot)}</div></div>
+        <div class="kpi-box"><div class="kpi-lbl">Da pagare</div><div class="kpi-val amber">${e(fDap)}</div></div>
+        <div class="kpi-box"><div class="kpi-lbl">Pagato</div><div class="kpi-val green">${e(fPag)}</div></div>
+        <div class="kpi-box" style="border-color:#fecaca"><div class="kpi-lbl">Scaduto</div><div class="kpi-val red">${e(fSc)}</div></div>
+      </div>
+      <div style="font-size:10px;color:#6b7280;margin-bottom:3px">Saldato ${fPct}% del totale</div>
+      <div class="pbar-w"><div class="pbar" style="width:${fPct}%;background:#059669"></div></div>
+      <div style="margin-top:14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:8px">Top Fornitori per importo</div>
+      ${topForn.map(([fo,v],i)=>`
+        <div class="rank-row">
+          <div class="rank-num">${i+1}</div>
+          <div class="rank-name">${fo}</div>
+          <div class="rank-val">${e(v)}</div>
+        </div>
+        <div class="pbar-w" style="margin-bottom:6px"><div class="pbar" style="width:${Math.round(v/topForn[0][1]*100)}%;background:#7c3aed"></div></div>`).join('')}
+    </div>
+
+    <!-- CLIENTI -->
+    <div>
+      <div class="section-title" style="color:#0891b2">👥 Clienti</div>
+      <div class="kpi-grid">
+        <div class="kpi-box"><div class="kpi-lbl">Totale fatturato</div><div class="kpi-val blue">${e(cTot)}</div></div>
+        <div class="kpi-box"><div class="kpi-lbl">Da incassare</div><div class="kpi-val amber">${e(cDai)}</div></div>
+        <div class="kpi-box"><div class="kpi-lbl">Incassato</div><div class="kpi-val teal">${e(cInc)}</div></div>
+        <div class="kpi-box" style="border-color:#fecaca"><div class="kpi-lbl">In ritardo</div><div class="kpi-val red">${e(cRit)}</div></div>
+      </div>
+      <div style="font-size:10px;color:#6b7280;margin-bottom:3px">Incassato ${cPct}% del totale</div>
+      <div class="pbar-w"><div class="pbar" style="width:${cPct}%;background:#0891b2"></div></div>
+      <div style="margin-top:14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:8px">Top Clienti per importo</div>
+      ${topCli.map(([cli,v],i)=>`
+        <div class="rank-row">
+          <div class="rank-num">${i+1}</div>
+          <div class="rank-name">${cli}</div>
+          <div class="rank-val">${e(v)}</div>
+        </div>
+        <div class="pbar-w" style="margin-bottom:6px"><div class="pbar" style="width:${Math.round(v/topCli[0][1]*100)}%;background:#0891b2"></div></div>`).join('')}
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">⏰ Scadenze urgenti — prossimi 30 giorni</div>
+  ${urgent.length===0?'<p style="color:#9ca3af;font-size:12px">Nessuna scadenza nei prossimi 30 giorni.</p>':`
+  <table>
+    <thead><tr><th>Tipo</th><th>Nome</th><th>N° Fattura</th><th>Importo</th><th>Scadenza tra</th></tr></thead>
+    <tbody>${urgent.map(r=>{
+      const ggTxt=r.diff<0?`SCADUTA ${Math.abs(r.diff)}gg fa`:r.diff===0?'Oggi':r.diff+'gg';
+      const col=r.diff<0?'#dc2626':r.diff<=7?'#d97706':'#374151';
+      return `<tr>
+        <td><span class="badge ${r.tipo==='Fornitore'?'badge-forn':'badge-cli'}">${r.tipo}</span></td>
+        <td style="font-weight:600">${r.nome}</td>
+        <td style="font-family:monospace;color:#6b7280">${r.num}</td>
+        <td style="font-family:monospace;font-weight:600">${e(r.imp)}</td>
+        <td style="font-weight:700;color:${col}">${ggTxt}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`}
+</div>
+
+<div class="footer">GestFatture Pro · Panoramica generata il ${dateStr}</div>
+</body></html>`;
+
+  const win=window.open('','_blank','width=960,height=720');
+  win.document.write(html);
+  win.document.close();
+  win.onload=()=>{ setTimeout(()=>win.print(),400); };
+  toast('PDF Panoramica pronto');
+}
+
+// ── EXPORT PANORAMICA XLSX ─────────────────────────────────────────────────
+function exportPanoramicaXlsx(){
+  if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
+  const now=new Date();
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: KPI riepilogo
+  const fTot=FAT.reduce((s,f)=>s+f.imp,0);
+  const fPag=FAT.filter(f=>f.sta==='pagata').reduce((s,f)=>s+f.imp,0);
+  const fDap=FAT.filter(f=>f.sta==='da_pagare').reduce((s,f)=>s+f.imp,0);
+  const fSc=FAT.filter(f=>f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const cTot=FAT_CLIENTI.reduce((s,f)=>s+f.imp,0);
+  const cInc=FAT_CLIENTI.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const cDai=FAT_CLIENTI.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
+  const cRit=FAT_CLIENTI.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+
+  const kpiData=[
+    ['PANORAMICA — '+now.toLocaleDateString('it-IT')],
+    [],
+    ['INDICATORE','VALORE'],
+    ['Saldo netto (Incassi − Uscite)', cInc-fPag],
+    [],
+    ['--- FORNITORI ---',''],
+    ['Totale acquistato', fTot],
+    ['Pagato', fPag],
+    ['Da pagare', fDap],
+    ['Scaduto', fSc],
+    ['% Saldato', fTot>0?Math.round(fPag/fTot*100):0],
+    [],
+    ['--- CLIENTI ---',''],
+    ['Totale fatturato', cTot],
+    ['Incassato', cInc],
+    ['Da incassare', cDai],
+    ['In ritardo', cRit],
+    ['% Incassato', cTot>0?Math.round(cInc/cTot*100):0],
+  ];
+  const wsKpi=XLSX.utils.aoa_to_sheet(kpiData);
+  wsKpi['!cols']=[{wch:30},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,wsKpi,'KPI Panoramica');
+
+  // Sheet 2: Top fornitori
+  const fMap={};
+  FAT.forEach(f=>{ fMap[f.fo]=(fMap[f.fo]||0)+f.imp; });
+  const topFornData=[['FORNITORE','TOTALE €','N° FATTURE','PAGATO €','DA PAGARE €','SCADUTO €']];
+  Object.entries(fMap).sort((a,b)=>b[1]-a[1]).forEach(([fo,tot])=>{
+    const list=FAT.filter(f=>f.fo===fo);
+    topFornData.push([fo,tot,list.length,
+      list.filter(f=>f.sta==='pagata').reduce((s,f)=>s+f.imp,0),
+      list.filter(f=>f.sta==='da_pagare').reduce((s,f)=>s+f.imp,0),
+      list.filter(f=>f.sta==='scaduta').reduce((s,f)=>s+f.imp,0),
+    ]);
+  });
+  const wsForn=XLSX.utils.aoa_to_sheet(topFornData);
+  wsForn['!cols']=[{wch:30},{wch:14},{wch:12},{wch:14},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,wsForn,'Top Fornitori');
+
+  // Sheet 3: Top clienti
+  const cMap={};
+  FAT_CLIENTI.forEach(f=>{ cMap[f.cli]=(cMap[f.cli]||0)+f.imp; });
+  const topCliData=[['CLIENTE','TOTALE €','N° FATTURE','INCASSATO €','DA INCASSARE €','IN RITARDO €']];
+  Object.entries(cMap).sort((a,b)=>b[1]-a[1]).forEach(([cli,tot])=>{
+    const list=FAT_CLIENTI.filter(f=>f.cli===cli);
+    topCliData.push([cli,tot,list.length,
+      list.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0),
+      list.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0),
+      list.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0),
+    ]);
+  });
+  const wsCli=XLSX.utils.aoa_to_sheet(topCliData);
+  wsCli['!cols']=[{wch:30},{wch:14},{wch:12},{wch:14},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,wsCli,'Top Clienti');
+
+  // Sheet 4: Scadenze urgenti 30gg
+  const urgData=[['TIPO','NOME','N° FATTURA','IMPORTO €','GIORNI ALLA SCADENZA']];
+  FAT.forEach(f=>{
+    getFatScadenze(f).filter(s=>s.sta!=='pagata'&&s.data).forEach(s=>{
+      const d=Math.floor((new Date(s.data)-now)/86400000);
+      if(d<=30) urgData.push(['Fornitore',f.fo,f.num,s.imp||f.imp,d]);
+    });
+    if((!f.scadenze||!f.scadenze.length)&&f.sc&&f.sta!=='pagata'){
+      const d=Math.floor((new Date(f.sc)-now)/86400000);
+      if(d<=30) urgData.push(['Fornitore',f.fo,f.num,f.imp,d]);
+    }
+  });
+  FAT_CLIENTI.forEach(f=>{
+    (f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).forEach(s=>{
+      const d=Math.floor((new Date(s.data)-now)/86400000);
+      if(d<=30) urgData.push(['Cliente',f.cli,f.num,s.imp||f.imp,d]);
+    });
+  });
+  urgData.sort((a,b)=>a[4]-b[4]);
+  const wsUrg=XLSX.utils.aoa_to_sheet(urgData);
+  wsUrg['!cols']=[{wch:12},{wch:30},{wch:16},{wch:14},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,wsUrg,'Scadenze 30gg');
+
+  // Sheet 5: Andamento mensile
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const mForn=Array(12).fill(0);
+  const mCli=Array(12).fill(0);
+  FAT.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mForn[m]+=f.imp; });
+  FAT_CLIENTI.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mCli[m]+=f.imp; });
+  const mensileData=[['MESE','SPESE FORNITORI €','INCASSI CLIENTI €','SALDO MENSILE €']];
+  months.forEach((m,i)=>{ mensileData.push([m, mForn[i], mCli[i], mCli[i]-mForn[i]]); });
+  const wsMen=XLSX.utils.aoa_to_sheet(mensileData);
+  wsMen['!cols']=[{wch:10},{wch:20},{wch:20},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,wsMen,'Andamento Mensile');
+
+  XLSX.writeFile(wb,'panoramica_'+today()+'.xlsx');
+  toast('XLSX Panoramica esportato (5 fogli)');
+}
 function rCC(){
   popSels();
   const g=document.getElementById('ccgrid');
@@ -3561,7 +4767,7 @@ function exportFattureCsv(){
   const bom = '\uFEFF';
   const header = ['Numero','Fornitore','P.IVA','Data','Scadenza','Importo EUR','IVA %','Stato','Data Pagamento','Metodo Pagamento','Centro di Costo','Tipo Doc','Note'];
   const rows = [header];
-  FAT.forEach(f=>{
+  getFilteredFatData().forEach(f=>{
     rows.push([
       f.num, f.fo, f.piva||'', f.dt, f.sc||'', (f.imp||0).toFixed(2),
       f.iva||22, f.sta, f.dpag||'', f.mpag||'',
@@ -3573,10 +4779,10 @@ function exportFattureCsv(){
   const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'fatture_'+today()+'.csv';
+  a.download = 'fatture_fornitori_'+today()+'.csv';
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('Fatture esportate in CSV');
+  toast('Fatture fornitori esportate in CSV');
 }
 
 
@@ -3643,6 +4849,10 @@ function rCli(){
   if(q)   data=data.filter(f=>f.cli.toLowerCase().includes(q)||f.num.toLowerCase().includes(q));
   const cc=document.getElementById('clicount');
   if(cc) cc.textContent=data.length+' · '+fmtE(data.reduce((s,f)=>s+f.imp,0));
+  // Mostra badge "filtrato" vicino ai bottoni export se ci sono filtri attivi
+  const isFiltered = !!(cli||st||d1||d2||q);
+  const hint=document.getElementById('cli-export-hint');
+  if(hint) hint.style.display=isFiltered?'inline':'none';
   const tb=document.getElementById('tb-cli'); if(!tb) return;
   tb.innerHTML='';
   if(!data.length){ tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ico">🔍</div><div style="font-size:13px">Nessuna fattura</div></div></td></tr>'; updateBulkBar(); return; }
@@ -3686,18 +4896,36 @@ function selClifat(id){
     </div>
     <div class="invh">
       <div style="font-weight:600;font-size:13px;margin-bottom:2px">${f.cli}</div>
-      ${f.piva?'<div style="font-size:11px;color:var(--tx3);font-family:monospace;margin-bottom:10px">P.IVA '+f.piva+'</div>':'<div style="margin-bottom:10px"></div>'}
       <div class="invamt" style="color:var(--teal)">${fmtE(f.imp)}</div>
       <div style="font-size:11px;color:var(--tx3);margin-top:4px">Data: ${f.dt}</div>
     </div>
-    ${f.li?.length?'<div style="margin-bottom:13px"><div class="psec">Righe</div>'+f.li.map(l=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--br)"><span style="color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+l.d+'</span><span style="font-family:monospace">'+fmtE(l.q*l.p)+'</span></div>').join('')+'</div>':''}
+    <div class="psec">Anagrafica cliente</div>
+    <div class="fg"><label class="fl2">RAGIONE SOCIALE</label>
+      <input type="text" id="cli-ana-nome" style="width:100%" value="${(f.cli||'').replace(/"/g,'&quot;')}" oninput="updCli('cli',this.value)">
+    </div>
+    <div class="fg"><label class="fl2">P.IVA / C.F.</label>
+      <input type="text" id="cli-ana-piva" style="width:100%;font-family:monospace" value="${(f.piva||'').replace(/"/g,'&quot;')}" oninput="updCli('piva',this.value)">
+    </div>
+    <div class="fg"><label class="fl2">📧 EMAIL SOLLECITI</label>
+      <input type="email" id="cli-ana-email" style="width:100%" value="${(f.email||'').replace(/"/g,'&quot;')}" placeholder="email@cliente.it" oninput="updCli('email',this.value)">
+    </div>
+    <div class="fg"><label class="fl2">📧 EMAIL CC (opzionale)</label>
+      <input type="email" id="cli-ana-email2" style="width:100%" value="${(f.email2||'').replace(/"/g,'&quot;')}" placeholder="cc@cliente.it" oninput="updCli('email2',this.value)">
+    </div>
+    <div class="fg"><label class="fl2">📞 TELEFONO</label>
+      <input type="tel" id="cli-ana-tel" style="width:100%" value="${(f.tel||'').replace(/"/g,'&quot;')}" placeholder="+39 02 123456" oninput="updCli('tel',this.value)">
+    </div>
+    <div class="fg"><label class="fl2">📍 INDIRIZZO</label>
+      <input type="text" id="cli-ana-addr" style="width:100%" value="${(f.indirizzo||'').replace(/"/g,'&quot;')}" placeholder="Via Roma 1, Milano" oninput="updCli('indirizzo',this.value)">
+    </div>
+    ${f.li?.length?'<div style="margin-bottom:13px"><div class="psec">Righe fattura</div>'+f.li.map(l=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--br)"><span style="color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+l.d+'</span><span style="font-family:monospace">'+fmtE(l.q*l.p)+'</span></div>').join('')+'</div>':''}
     <div class="div"></div>
     <div class="psec">Scadenze incasso</div>
     <div id="cli-sc-list" style="margin-bottom:5px"></div>
     <button class="btn btn-xs" onclick="addCliScadenza('${f.id}')">+ Scadenza</button>
     <div class="div"></div>
     <div class="fg"><label class="fl2">NOTE</label><textarea id="cli-nt" style="width:100%" rows="2" oninput="updCli('nt',this.value)">${f.nt||''}</textarea></div>
-    <button class="btn btn-p" style="width:100%;margin-top:8px;justify-content:center" onclick="saveCli()">💾 Salva</button>
+    <button class="btn btn-p" style="width:100%;margin-top:8px;justify-content:center" onclick="saveCli()">💾 Salva anagrafica e dati</button>
     <div class="div"></div>
     <button class="btn btn-sm" style="width:100%;justify-content:center;gap:6px;border-color:rgba(248,113,113,.4);color:var(--red)" onclick="openSollecito('${f.id}')">
       📧 Invia sollecito pagamento
@@ -4142,10 +5370,14 @@ async function startBatchImport(){
   document.getElementById('batch-import-btn').style.display='none';
   batchRunning = false;
 
-  // Refresh & save
+  // Refresh & save — forza sync cloud subito dopo batch
   if(batchMode==='fornitore'){ rFat(); rDash(); }
   else { rCli(); }
-  updBadge(); checkOverdueAlerts(); saveData();
+  updBadge(); checkOverdueAlerts();
+  saveData();
+  // Sync immediato senza aspettare il debounce da 1.5s
+  clearTimeout(syncTimeout);
+  syncTimeout=setTimeout(syncToCloud,200);
   toast(`Import completato: ${ok} fatture importate${errs?' · '+errs+' errori':''}`);
 }
 
@@ -4412,7 +5644,13 @@ function buildMsolPreviews(){
       <div style="padding:10px 13px">
         <div style="margin-bottom:6px">
           <label class="fl2">A</label>
-          <input type="email" id="msol-to-${gi}" style="width:100%;font-size:12px;padding:4px 8px" placeholder="${g.cli.toLowerCase().replace(/\s+/g,'.')}@email.com">
+          <input type="email" id="msol-to-${gi}" style="width:100%;font-size:12px;padding:4px 8px" placeholder="${g.cli.toLowerCase().replace(/\s+/g,'.')}@email.com"
+            value="${(()=>{ const _af=FAT_CLIENTI.find(f=>f.cli===g.cli); return _af?.email||''; })()}">
+          <div style="margin-top:5px">
+            <label style="font-size:10px;color:var(--tx3)">CC</label>
+            <input type="email" id="msol-cc2-${gi}" style="width:100%;font-size:12px;padding:3px 8px;margin-top:2px" placeholder="cc opzionale"
+              value="${(()=>{ const _af=FAT_CLIENTI.find(f=>f.cli===g.cli); return _af?.email2||''; })()}">
+          </div>
         </div>
         <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">OGGETTO: ${subj}</div>
       </div>
@@ -4478,8 +5716,10 @@ async function msolSendAll(){
     const {subj, body} = SOL_TEMPLATES[msolTemplate](g.cli, fatCombined, allScad, firma);
     const finalBody = bodyEl?.value || body;
 
+    const perCliCc = document.getElementById(`msol-cc2-${gi}`)?.value?.trim()||'';
+    const allCcs = [globalCc, perCliCc].filter(Boolean).join(',');
     let href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(finalBody);
-    if(globalCc) href+='&cc='+encodeURIComponent(globalCc);
+    if(allCcs) href+='&cc='+encodeURIComponent(allCcs);
     window.open(href, '_blank');
     sent++;
 
@@ -4563,8 +5803,10 @@ function openSollecito(fatId){
     </div>
     <div style="font-size:11px;color:var(--tx3);margin-top:7px">Fattura ${f.num} del ${f.dt} · ${selected.length} rata${selected.length>1?'e':''}</div>`;
 
-  document.getElementById('sol-to').value = '';
-  document.getElementById('sol-cc').value = '';
+  // Auto-fill email dall'anagrafica della fattura cliente
+  const _solAnaF = FAT_CLIENTI.find(x=>x.id===fatId);
+  document.getElementById('sol-to').value  = _solAnaF?.email  || '';
+  document.getElementById('sol-cc').value  = _solAnaF?.email2 || '';
   const savedFirma = localStorage.getItem('gestfatture_firma')||'';
   document.getElementById('sol-firma').value = savedFirma;
 
@@ -4786,72 +6028,132 @@ async function afterLogin(){
 
 // ── SAVE / SYNC ──────────────────────────────────────────────────────────
 function saveData(){
-  const payload={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS};
+  const ts = new Date().toISOString();
+  const payload={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,SPESE,ANTICIPI,CASTELLETTO,_saved:ts};
+  // 1. Salva SEMPRE in localStorage (istantaneo, offline-safe)
   try{ localStorage.setItem(STORE_KEY,JSON.stringify(payload)); }catch(e){}
+  // 2. Schedula sync cloud con debounce
   clearTimeout(syncTimeout);
-  syncTimeout=setTimeout(syncToCloud,1600);
+  syncTimeout=setTimeout(syncToCloud,1500);
 }
 
 async function syncToCloud(){
-  if(!currentUser||isSyncing) return;
+  // Funziona anche senza currentUser — usa sempre il binId se loggato
+  if(isSyncing) return;
+  if(!currentUser) return;  // loggato ma non ha binId → skip silenzioso
   isSyncing=true;
   showSync('syncing','Salvataggio…');
   try{
+    const ts = new Date().toISOString();
     await jbSet(currentUser.binId,{
-      FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,
-      _saved:new Date().toISOString()
+      FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,SPESE,ANTICIPI,CASTELLETTO,
+      _saved:ts
     });
+    // Aggiorna il timestamp nel locale per confronto futuro
+    try{
+      const raw=localStorage.getItem(STORE_KEY);
+      if(raw){ const p=JSON.parse(raw); p._saved=ts; localStorage.setItem(STORE_KEY,JSON.stringify(p)); }
+    }catch(e){}
     showSync('ok','Salvato ✓');
   }catch(e){
     console.warn('Sync error:',e);
-    showSync('err','Errore salvataggio');
+    showSync('err','Solo locale — riprovo tra 15s');
+    // Riprova automaticamente tra 15 secondi
+    clearTimeout(syncTimeout);
+    syncTimeout=setTimeout(syncToCloud,15000);
   }finally{ isSyncing=false; }
 }
 
 // ── LOAD ─────────────────────────────────────────────────────────────────
 async function loadData(){
-  if(currentUser){
-    try{
-      showSync('syncing','Caricamento…');
-      const d=await jbGet(currentUser.binId);
-      if(d.FAT)           FAT           =d.FAT;
-      if(d.CC)            CC            =d.CC;
-      if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
-      if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
-      if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
-      if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
-      const payload={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS};
-      localStorage.setItem(STORE_KEY,JSON.stringify(payload));
-      showSync('ok','Dati caricati');
-      return true;
-    }catch(e){
-      console.warn('Cloud load failed, using cache:',e);
-      showSync('err','Uso cache locale');
-    }
-  }
-  // Fallback cache locale
+  // Step 1: carica SEMPRE localStorage prima (istantaneo)
+  let localSaved='';
   try{
     const raw=localStorage.getItem(STORE_KEY);
-    if(!raw) return false;
-    const d=JSON.parse(raw);
-    if(d.FAT)           FAT           =d.FAT;
-    if(d.CC)            CC            =d.CC;
-    if(d.ARTICOLI_EXTRA)ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
-    if(d.PRICE_ALERTS)  PRICE_ALERTS  =d.PRICE_ALERTS;
-    if(d.FAT_CLIENTI)   FAT_CLIENTI   =d.FAT_CLIENTI;
-    if(d.OVERDUE_ALERTS)OVERDUE_ALERTS=d.OVERDUE_ALERTS;
-    return true;
-  }catch(e){ return false; }
+    if(raw){
+      const d=JSON.parse(raw);
+      // Usa 'in' invece di if(d.X) per gestire correttamente array vuoti []
+      if('FAT'           in d) FAT           =d.FAT;
+      if('CC'            in d) CC            =d.CC;
+      if('ARTICOLI_EXTRA'in d) ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
+      if('PRICE_ALERTS'  in d) PRICE_ALERTS  =d.PRICE_ALERTS;
+      if('FAT_CLIENTI'   in d) FAT_CLIENTI   =d.FAT_CLIENTI;
+      if('OVERDUE_ALERTS'in d) OVERDUE_ALERTS=d.OVERDUE_ALERTS;
+      if('SPESE'         in d) SPESE         =d.SPESE;
+      if('ANTICIPI'      in d) ANTICIPI      =d.ANTICIPI;
+      if('CASTELLETTO'   in d) CASTELLETTO   =d.CASTELLETTO;
+      localSaved=d._saved||'';
+    }
+  }catch(e){}
+
+  // Step 2: scarica dal cloud e usa SOLO se più recente del locale
+  if(currentUser){
+    try{
+      showSync('syncing','Verifica cloud…');
+      const d=await jbGet(currentUser.binId);
+      const cloudSaved=d._saved||'';
+      // Usa il cloud solo se ha un _saved più recente del locale
+      if(!localSaved||(cloudSaved&&cloudSaved>localSaved)){
+      // Usa 'in' invece di if(d.X) per gestire correttamente array vuoti []
+      if('FAT'           in d) FAT           =d.FAT;
+      if('CC'            in d) CC            =d.CC;
+      if('ARTICOLI_EXTRA'in d) ARTICOLI_EXTRA=d.ARTICOLI_EXTRA;
+      if('PRICE_ALERTS'  in d) PRICE_ALERTS  =d.PRICE_ALERTS;
+      if('FAT_CLIENTI'   in d) FAT_CLIENTI   =d.FAT_CLIENTI;
+      if('OVERDUE_ALERTS'in d) OVERDUE_ALERTS=d.OVERDUE_ALERTS;
+      if('SPESE'         in d) SPESE         =d.SPESE;
+      if('ANTICIPI'      in d) ANTICIPI      =d.ANTICIPI;
+      if('CASTELLETTO'   in d) CASTELLETTO   =d.CASTELLETTO;
+        // Aggiorna locale col cloud più recente
+        const p={FAT,CC,ARTICOLI_EXTRA,PRICE_ALERTS,FAT_CLIENTI,OVERDUE_ALERTS,SPESE,ANTICIPI,CASTELLETTO,_saved:cloudSaved};
+        try{ localStorage.setItem(STORE_KEY,JSON.stringify(p)); }catch(e){}
+        showSync('ok','Cloud caricato ✓');
+      } else {
+        // Locale più recente del cloud → carica il locale sul cloud subito
+        showSync('ok','Dati locali più recenti — upload…');
+        clearTimeout(syncTimeout);
+        syncTimeout=setTimeout(syncToCloud,300);
+      }
+      return true;
+    }catch(e){
+      console.warn('Cloud load failed, using local cache:',e);
+      showSync('err','Cloud non raggiungibile — uso cache locale');
+    }
+  }
+  return !!localSaved;
 }
 
 // ── DELETE ALL ────────────────────────────────────────────────────────────
 async function _doDeleteAll(){
+  const emptyPayload={
+    FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],
+    FAT_CLIENTI:[],OVERDUE_ALERTS:[],SPESE:[],ANTICIPI:[],
+    CASTELLETTO:{importo:0,tipo:'fisso',pct:80},
+    _saved:new Date().toISOString()
+  };
+
+  // 1. Svuota localStorage PRIMA di tutto
+  localStorage.removeItem(STORE_KEY);
+
+  // 2. Azzera variabili in memoria subito
+  FAT=[];CC=[];ARTICOLI_EXTRA=[];PRICE_ALERTS=[];
+  FAT_CLIENTI=[];OVERDUE_ALERTS=[];SPESE=[];ANTICIPI=[];
+  CASTELLETTO={importo:0,tipo:'fisso',pct:80};
+
+  // 3. Svuota cloud e ASPETTA la risposta prima di ricaricare
   if(currentUser){
     try{
-      await jbSet(currentUser.binId,{FAT:[],CC:[],ARTICOLI_EXTRA:[],PRICE_ALERTS:[],FAT_CLIENTI:[],OVERDUE_ALERTS:[]});
-    }catch(e){ console.warn('Cloud delete failed:',e); }
+      await jbSet(currentUser.binId, emptyPayload);
+      // Salva anche localStorage con i dati vuoti + timestamp aggiornato
+      // così al reload il confronto cloud/locale non riporta i vecchi dati
+      localStorage.setItem(STORE_KEY, JSON.stringify(emptyPayload));
+    }catch(e){
+      console.warn('Cloud delete failed:', e);
+      // Anche se cloud fallisce, il locale è già pulito
+    }
   }
-  localStorage.removeItem(STORE_KEY);
+
+  // 4. Ricarica solo dopo aver completato tutto
   location.reload();
 }
 
@@ -4955,7 +6257,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
   const toWrap = [
     'saveMFat','saveF','delF','saveMCC',
     'confirmXmlImport','saveMArt','saveArtCC','delArtExtra',
-    'dismissAlert','dismissAllAlerts','saveCli','delCli'
+    'dismissAlert','dismissAllAlerts','saveCli','delCli',
+    'saveMSpesa','delSpesa'
   ];
   toWrap.forEach(name=>{
     if(typeof window[name]==='function'){
@@ -5518,12 +6821,18 @@ function bancaReset(){
 function rDashClienti(){
   FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
 
+  // Popola anni e leggi filtro
+  popDashYears('cli', FAT_CLIENTI, []);
+  const flt=getDashFilter('cli');
+  const periodLabel=getDashPeriodLabel('cli');
+  const cliF=FAT_CLIENTI.filter(flt);
+
   // ── KPI ─────────────────────────────────
-  const tot     = FAT_CLIENTI.reduce((s,f)=>s+f.imp,0);
-  const incassato= FAT_CLIENTI.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
-  const aperto  = FAT_CLIENTI.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
-  const ritardo = FAT_CLIENTI.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
-  const nRitardo= FAT_CLIENTI.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').length;
+  const tot     = cliF.reduce((s,f)=>s+f.imp,0);
+  const incassato= cliF.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const aperto  = cliF.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
+  const ritardo = cliF.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const nRitardo= cliF.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').length;
 
   const kpiEl = document.getElementById('dc-kpi');
   if(kpiEl) kpiEl.innerHTML=[
@@ -5531,29 +6840,26 @@ function rDashClienti(){
     {l:'Incassato',v:fmtE(incassato),ic:'✅',c:'--green'},
     {l:'Da incassare',v:fmtE(aperto),ic:'⏳',c:'--amber'},
     {l:'In ritardo ('+nRitardo+')',v:fmtE(ritardo),ic:'⚠',c:'--red'},
-  ].map(k=>`<div class="kcard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(${k.c})"></div><div class="kcard-ico">${k.ic}</div><div class="kcard-lbl">${k.l}</div><div class="kcard-val" style="color:var(${k.c})">${k.v}</div></div>`).join('');
+  ].map(k=>`<div class="kcard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(${k.c})"></div><div class="kcard-ico">${k.ic}</div><div class="kcard-lbl">${k.l}</div><div class="kcard-val" style="color:var(${k.c})">${k.v}</div>${periodLabel!=='Totale complessivo'?'<div class="kcard-sub">📅 '+periodLabel+'</div>':''}</div>`).join('');
 
   // ── Grafico mensile ─────────────────────
   const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
   const mData=Array(12).fill(0);
-  FAT_CLIENTI.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mData[m]+=f.imp; });
+  cliF.forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mData[m]+=f.imp; });
   const mc=document.getElementById('dc-ch-monthly');
   if(mc) setTimeout(()=>mkBarChart(mc, months, mData, 'rgba(45,212,191,.75)', 200), 10);
 
   // ── Donut stato incassi ─────────────────
-  const donutData=[incassato, aperto, ritardo];
-  const donutLabels=['Incassato','Da incassare','In ritardo'];
-  const donutColors=['#34d399','#fbbf24','#f87171'];
   const dc=document.getElementById('dc-ch-donut');
-  if(dc) setTimeout(()=>{ dc.innerHTML=mkDonut(dc, donutLabels, donutData, donutColors, 160); }, 10);
+  if(dc) setTimeout(()=>{ dc.innerHTML=mkDonut(dc,['Incassato','Da incassare','In ritardo'],[incassato,aperto,ritardo],['#34d399','#fbbf24','#f87171'],160); }, 10);
 
   // ── Griglia clienti ─────────────────────
   const g=document.getElementById('dc-grid'); if(!g) return;
   const m2={};
-  FAT_CLIENTI.forEach(f=>{ 
+  cliF.forEach(f=>{
     if(!m2[f.cli]) m2[f.cli]={cli:f.cli, piva:f.piva||'', list:[], tot:0};
-    m2[f.cli].list.push(f); 
-    m2[f.cli].tot+=f.imp; 
+    m2[f.cli].list.push(f);
+    m2[f.cli].tot+=f.imp;
   });
   g.innerHTML='';
   Object.values(m2).sort((a,b)=>b.tot-a.tot).forEach(v=>{
@@ -5588,7 +6894,7 @@ function rDashClienti(){
   // ── Tabella scadenze ────────────────────
   const now = new Date();
   const rows=[];
-  FAT_CLIENTI.forEach(f=>{
+  cliF.forEach(f=>{
     const scs=f.scadenze||[];
     if(scs.length){
       scs.filter(s=>s.sta!=='incassata'&&s.data).forEach(s=>{
@@ -5625,141 +6931,1472 @@ function rDashClienti(){
 }
 
 // ══════════════════════════════════════════
+// HELPERS: DATI FILTRATI PER EXPORT
+// ══════════════════════════════════════════
+
+// Restituisce le fatture clienti filtrate secondo i filtri attivi nella pagina clienti
+function getFilteredCliData(){
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+  const cli = document.getElementById('fc-cli')?.value||'';
+  const st  = document.getElementById('fc-st')?.value||'';
+  const d1  = document.getElementById('fc-d1')?.value||'';
+  const d2  = document.getElementById('fc-d2')?.value||'';
+  const q   = (document.getElementById('sc-q')?.value||'').toLowerCase();
+  let data  = FAT_CLIENTI;
+  if(cli) data=data.filter(f=>f.cli===cli);
+  if(st)  data=data.filter(f=>f.sta===st);
+  if(d1)  data=data.filter(f=>f.dt>=d1);
+  if(d2)  data=data.filter(f=>f.dt<=d2);
+  if(q)   data=data.filter(f=>f.cli.toLowerCase().includes(q)||f.num.toLowerCase().includes(q));
+  return data;
+}
+
+// Restituisce le fatture fornitori filtrate secondo i filtri attivi nella pagina fatture
+function getFilteredFatData(){
+  const fo = document.getElementById('ff-fo')?.value||'';
+  const st = document.getElementById('ff-st')?.value||'';
+  const d1 = document.getElementById('ff-d1')?.value||'';
+  const d2 = document.getElementById('ff-d2')?.value||'';
+  const cc = document.getElementById('ff-cc')?.value||'';
+  const q  = (document.getElementById('sf-q')?.value||'').toLowerCase();
+  let data = FAT;
+  if(fo) data=data.filter(f=>f.fo===fo);
+  if(st) data=data.filter(f=>f.sta===st);
+  if(d1) data=data.filter(f=>f.dt>=d1);
+  if(d2) data=data.filter(f=>f.dt<=d2);
+  if(cc) data=data.filter(f=>f.cc===cc);
+  if(q)  data=data.filter(f=>f.fo.toLowerCase().includes(q)||f.num.toLowerCase().includes(q)||(f.nt||'').toLowerCase().includes(q));
+  return data;
+}
+
+// ══════════════════════════════════════════
 // EXPORT FATTURE CLIENTI — CSV / XLSX / PDF
 // ══════════════════════════════════════════
 function exportCliCsv(){
+  // Usa filtro dashboard se attivo, altrimenti filtri pagina clienti
+  const dashFlt=getDashFilter('cli');
+  const hasDashFlt=!!(document.getElementById('cli-yr')?.value||document.getElementById('cli-mo')?.value);
+  const rows=hasDashFlt ? [...FAT_CLIENTI.filter(dashFlt)] : getFilteredCliData();
+  const periodLabel=getDashPeriodLabel('cli');
   const bom='\uFEFF';
-  const header=['Numero','Cliente','P.IVA','Data','Scadenza','Importo EUR','IVA %','Stato','Data Incasso','Note'];
-  const rows=[header];
-  FAT_CLIENTI.forEach(f=>{
+  const header=['Numero','Cliente','P.IVA','Data','Scadenza','Imponibile EUR','IVA %','IVA EUR','Totale EUR','Stato','Data Incasso','Note'];
+  const csvRows=[header];
+  rows.forEach(f=>{
+    const iva=f.iva||22;
+    const imponibile=(f.imp/(1+iva/100)).toFixed(2);
+    const ivaAmt=(f.imp-parseFloat(imponibile)).toFixed(2);
     const sc=getCliNextSc(f)||'';
-    rows.push([f.num,f.cli,f.piva||'',f.dt,sc,(f.imp||0).toFixed(2),f.iva||22,f.sta,f.dpag||'',(f.nt||'').replace(/,/g,';').replace(/\n/g,' ')]);
+    csvRows.push([f.num,f.cli,f.piva||'',f.dt,sc,imponibile,iva,ivaAmt,(f.imp||0).toFixed(2),f.sta,f.dpag||'',(f.nt||'').replace(/,/g,';').replace(/\n/g,' ')]);
   });
-  const csv=bom+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const csv=bom+csvRows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='fatture_clienti_'+today()+'.csv'; a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='clienti_'+periodLabel.replace(/\s/g,'_')+'_'+today()+'.csv'; a.click();
   URL.revokeObjectURL(a.href);
-  toast('Fatture clienti esportate in CSV');
+  toast('CSV clienti esportato ('+periodLabel+' · '+rows.length+' fatture)');
 }
 
 function exportCliXlsx(){
   if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
-  const wsData=[['Numero','Cliente','P.IVA','Data','Scadenza','Importo €','IVA %','Stato','Data Incasso','Note']];
-  FAT_CLIENTI.forEach(f=>{
-    wsData.push([f.num,f.cli,f.piva||'',f.dt,getCliNextSc(f)||'',f.imp||0,f.iva||22,f.sta,f.dpag||'',f.nt||'']);
-  });
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet(wsData);
-  // Style header row width
-  ws['!cols']=[{wch:14},{wch:28},{wch:16},{wch:12},{wch:12},{wch:12},{wch:7},{wch:14},{wch:12},{wch:30}];
-  XLSX.utils.book_append_sheet(wb,ws,'Fatture Clienti');
-  // Scadenze sheet
-  const scData=[['Cliente','Numero','Data','Scadenza','Importo','Stato','Giorni mancanti']];
+  const dashFlt=getDashFilter('cli');
+  const hasDashFlt=!!(document.getElementById('cli-yr')?.value||document.getElementById('cli-mo')?.value);
+  const filteredCli=hasDashFlt ? [...FAT_CLIENTI.filter(dashFlt)] : getFilteredCliData();
+  const periodLabel=getDashPeriodLabel('cli');
   const now=new Date();
-  FAT_CLIENTI.forEach(f=>{
+
+  const tot=filteredCli.reduce((s,f)=>s+f.imp,0);
+  const totImponibile=filteredCli.reduce((s,f)=>s+f.imp/(1+(f.iva||22)/100),0);
+
+  // Sheet 1: riepilogo
+  const riepilogo=[
+    ['RIEPILOGO CLIENTI — '+periodLabel],
+    [],
+    ['Periodo', periodLabel],
+    ['N° fatture', filteredCli.length],
+    [],
+    ['Totale imponibile', parseFloat(totImponibile.toFixed(2))],
+    ['Totale IVA', parseFloat((tot-totImponibile).toFixed(2))],
+    ['Totale fatturato', tot],
+    [],
+    ['Incassato', filteredCli.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0)],
+    ['Da incassare', filteredCli.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0)],
+    ['In ritardo', filteredCli.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0)],
+  ];
+
+  // Sheet 2: dettaglio con imponibile
+  const wsData=[['Numero','Cliente','P.IVA','Data','Scadenza','Imponibile €','IVA %','IVA €','Totale €','Stato','Data Incasso','Note']];
+  filteredCli.sort((a,b)=>a.dt.localeCompare(b.dt)).forEach(f=>{
+    const iva=f.iva||22;
+    const imponibile=parseFloat((f.imp/(1+iva/100)).toFixed(2));
+    const ivaAmt=parseFloat((f.imp-imponibile).toFixed(2));
+    wsData.push([f.num,f.cli,f.piva||'',f.dt,getCliNextSc(f)||'',imponibile,iva,ivaAmt,f.imp||0,f.sta,f.dpag||'',f.nt||'']);
+  });
+
+  // Sheet 3: scadenze aperte
+  const scData=[['Cliente','Numero','Data','Scadenza','Importo','Stato','Giorni mancanti']];
+  filteredCli.forEach(f=>{
     (f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).forEach(s=>{
       const diff=Math.floor((new Date(s.data)-now)/86400000);
       scData.push([f.cli,f.num,f.dt,s.data,s.imp||f.imp,s.sta,diff]);
     });
   });
-  const ws2=XLSX.utils.aoa_to_sheet(scData);
-  ws2['!cols']=[{wch:28},{wch:14},{wch:12},{wch:12},{wch:12},{wch:14},{wch:10}];
+
+  const wb=XLSX.utils.book_new();
+  const wsR=XLSX.utils.aoa_to_sheet(riepilogo); wsR['!cols']=[{wch:28},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,wsR,'Riepilogo');
+  const ws=XLSX.utils.aoa_to_sheet(wsData); ws['!cols']=[{wch:14},{wch:28},{wch:14},{wch:12},{wch:12},{wch:14},{wch:7},{wch:12},{wch:12},{wch:14},{wch:12},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws,'Fatture Clienti');
+  const ws2=XLSX.utils.aoa_to_sheet(scData); ws2['!cols']=[{wch:28},{wch:14},{wch:12},{wch:12},{wch:12},{wch:14},{wch:10}];
   XLSX.utils.book_append_sheet(wb,ws2,'Scadenze Aperte');
-  XLSX.writeFile(wb,'fatture_clienti_'+today()+'.xlsx');
-  toast('Fatture clienti esportate in XLSX');
+  XLSX.writeFile(wb,'clienti_'+periodLabel.replace(/\s/g,'_')+'_'+today()+'.xlsx');
+  toast('XLSX clienti esportato ('+periodLabel+' · '+filteredCli.length+' fatture)');
 }
 
 async function exportCliPdf(){
+  const dashFlt=getDashFilter('cli');
+  const hasDashFlt=!!(document.getElementById('cli-yr')?.value||document.getElementById('cli-mo')?.value);
+  const filteredCli=hasDashFlt ? [...FAT_CLIENTI.filter(dashFlt)] : getFilteredCliData();
+  const periodLabel=getDashPeriodLabel('cli');
   const now=new Date();
   const dateStr=now.toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
-  const tot=FAT_CLIENTI.reduce((s,f)=>s+f.imp,0);
-  const inc=FAT_CLIENTI.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
-  const ap =FAT_CLIENTI.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
-  const rit=FAT_CLIENTI.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
+  const rows=[...filteredCli].sort((a,b)=>a.dt.localeCompare(b.dt));
+
+  const tot=rows.reduce((s,f)=>s+f.imp,0);
+  const totImponibile=rows.reduce((s,f)=>s+f.imp/(1+(f.iva||22)/100),0);
+  const totIva=tot-totImponibile;
+  const inc=rows.filter(f=>f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const ap =rows.filter(f=>f.sta==='da_incassare').reduce((s,f)=>s+f.imp,0);
+  const rit=rows.filter(f=>f.sta==='in_ritardo'||f.sta==='scaduta').reduce((s,f)=>s+f.imp,0);
 
   const staLabel=s=>({incassata:'Incassata',da_incassare:'Da incassare',in_ritardo:'In ritardo',scaduta:'Scaduta'}[s]||s);
-  const rows=[...FAT_CLIENTI].sort((a,b)=>a.dt.localeCompare(b.dt));
+  const e=v=>fmtE(v);
 
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Fatture Clienti</title>
 <style>
 body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a2e;margin:0;padding:0}
-.header{background:#0f3460;color:#fff;padding:24px 32px;margin-bottom:0}
+.header{background:#0f766e;color:#fff;padding:24px 32px}
 .header h1{margin:0 0 4px;font-size:22px;font-weight:800}
 .header p{margin:0;font-size:11px;opacity:.8}
-.kpi-row{display:flex;gap:0;background:#f8f9fc;border-bottom:1px solid #e5e7eb}
-.kpi{flex:1;padding:14px 20px;border-right:1px solid #e5e7eb}
+.period{background:#115e59;color:#99f6e4;padding:6px 32px;font-size:11px;font-weight:600}
+.kpi-row{display:flex;gap:0;background:#f0fdfa;border-bottom:1px solid #99f6e4}
+.kpi{flex:1;padding:12px 16px;border-right:1px solid #ccfbf1;text-align:center}
 .kpi:last-child{border-right:none}
-.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;font-weight:600;margin-bottom:4px}
-.kpi-val{font-size:18px;font-weight:700;color:#0f3460}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;font-weight:600;margin-bottom:3px}
+.kpi-val{font-size:16px;font-weight:700;color:#0f766e}
 .kpi-val.green{color:#059669}.kpi-val.amber{color:#d97706}.kpi-val.red{color:#dc2626}
-.section{padding:20px 32px}
-.section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#374151;margin-bottom:12px;border-bottom:2px solid #e5e7eb;padding-bottom:6px}
-table{width:100%;border-collapse:collapse;font-size:11px}
-thead th{background:#f3f4f6;padding:8px 10px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.4px;font-size:9px;color:#6b7280;border-bottom:2px solid #e5e7eb}
-tbody tr{border-bottom:1px solid #f3f4f6}
+.impon-row{display:flex;background:#f0fdf4;border-bottom:1px solid #bbf7d0;padding:10px 32px;gap:32px;font-size:11px}
+.impon-item{display:flex;flex-direction:column;gap:2px}
+.impon-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#16a34a;font-weight:600}
+.impon-val{font-weight:700;color:#15803d;font-size:13px}
+.section{padding:16px 32px}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#374151;margin-bottom:10px;border-bottom:2px solid #e5e7eb;padding-bottom:5px}
+table{width:100%;border-collapse:collapse;font-size:10px}
+thead th{background:#f3f4f6;padding:6px 8px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.4px;font-size:8px;color:#6b7280;border-bottom:2px solid #e5e7eb}
 tbody tr:nth-child(even){background:#fafafa}
-td{padding:7px 10px;vertical-align:middle}
-.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:600}
+td{padding:5px 8px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.badge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:8px;font-weight:600}
 .badge-inc{background:#d1fae5;color:#065f46}
 .badge-ap{background:#fef3c7;color:#92400e}
 .badge-rit{background:#fee2e2;color:#991b1b}
-.footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:12px 32px;font-size:10px;color:#9ca3af;text-align:center}
+.footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:10px 32px;font-size:10px;color:#9ca3af;text-align:center}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>
-<div class="header"><h1>📊 Fatture Clienti</h1><p>Generato il ${dateStr} · ${rows.length} fatture · GestFatture Pro</p></div>
+<div class="header"><h1>👥 Dashboard Clienti</h1><p>Generato il ${dateStr} · ${rows.length} fatture · GestFatture Pro</p></div>
+${periodLabel!=='Totale complessivo'?`<div class="period">📅 Periodo: ${periodLabel}</div>`:''}
 <div class="kpi-row">
-  <div class="kpi"><div class="kpi-label">Totale fatturato</div><div class="kpi-val">${fmtE(tot)}</div></div>
-  <div class="kpi"><div class="kpi-label">Incassato</div><div class="kpi-val green">${fmtE(inc)}</div></div>
-  <div class="kpi"><div class="kpi-label">Da incassare</div><div class="kpi-val amber">${fmtE(ap)}</div></div>
-  <div class="kpi"><div class="kpi-label">In ritardo</div><div class="kpi-val red">${fmtE(rit)}</div></div>
+  <div class="kpi"><div class="kpi-label">Totale fatturato</div><div class="kpi-val">${e(tot)}</div></div>
+  <div class="kpi"><div class="kpi-label">Incassato</div><div class="kpi-val green">${e(inc)}</div></div>
+  <div class="kpi"><div class="kpi-label">Da incassare</div><div class="kpi-val amber">${e(ap)}</div></div>
+  <div class="kpi"><div class="kpi-label">In ritardo</div><div class="kpi-val red">${e(rit)}</div></div>
+</div>
+<div class="impon-row">
+  <div class="impon-item"><div class="impon-lbl">Totale imponibile (IVA esclusa)</div><div class="impon-val">${e(totImponibile)}</div></div>
+  <div class="impon-item"><div class="impon-lbl">Totale IVA</div><div class="impon-val">${e(totIva)}</div></div>
+  <div class="impon-item"><div class="impon-lbl">Totale fatturato (IVA inclusa)</div><div class="impon-val">${e(tot)}</div></div>
+  <div class="impon-item"><div class="impon-lbl">N° fatture</div><div class="impon-val">${rows.length}</div></div>
 </div>
 <div class="section">
 <div class="section-title">Elenco fatture clienti</div>
-<table><thead><tr><th>Numero</th><th>Cliente</th><th>P.IVA</th><th>Data</th><th>Scadenza</th><th>Importo</th><th>IVA</th><th>Stato</th><th>Note</th></tr></thead>
+<table><thead><tr>
+  <th>Numero</th><th>Cliente</th><th>Data</th><th>Scadenza</th>
+  <th>Imponibile</th><th>IVA %</th><th>IVA €</th><th>Totale</th><th>Stato</th>
+</tr></thead>
 <tbody>${rows.map(f=>{
+  const iva=f.iva||22;
+  const imponibile=(f.imp/(1+iva/100)).toFixed(2);
+  const ivaAmt=(f.imp-parseFloat(imponibile)).toFixed(2);
   const sc=getCliNextSc(f)||'—';
   const badgeClass=f.sta==='incassata'?'badge-inc':f.sta==='da_incassare'?'badge-ap':'badge-rit';
   return `<tr>
-    <td style="font-family:monospace;color:#0f3460">${f.num}</td>
+    <td style="font-family:monospace;color:#0f766e">${f.num}</td>
     <td style="font-weight:600">${f.cli}</td>
-    <td style="font-family:monospace;font-size:10px;color:#6b7280">${f.piva||'—'}</td>
     <td>${f.dt}</td>
     <td>${sc}</td>
-    <td style="font-family:monospace;font-weight:600">${fmtE(f.imp)}</td>
-    <td>${f.iva||22}%</td>
+    <td style="font-family:monospace">€ ${imponibile}</td>
+    <td style="text-align:center">${iva}%</td>
+    <td style="font-family:monospace;color:#6b7280">€ ${ivaAmt}</td>
+    <td style="font-family:monospace;font-weight:700">${e(f.imp)}</td>
     <td><span class="badge ${badgeClass}">${staLabel(f.sta)}</span></td>
-    <td style="color:#6b7280;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.nt||''}</td>
   </tr>`;
 }).join('')}</tbody></table>
 </div>
 <div class="section">
 <div class="section-title">Scadenze aperte</div>
 <table><thead><tr><th>Cliente</th><th>N° Fattura</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Giorni</th></tr></thead>
-<tbody>${FAT_CLIENTI.flatMap(f=>(f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).map(s=>{
+<tbody>${rows.flatMap(f=>(f.scadenze||[]).filter(s=>s.sta!=='incassata'&&s.data).map(s=>{
   const diff=Math.floor((new Date(s.data)-now)/86400000);
-  const ggTxt=diff<0?`SCADUTA ${Math.abs(diff)}gg fa`:diff===0?'Oggi':diff+'gg';
+  const ggTxt=diff<0?'SCADUTA '+Math.abs(diff)+'gg fa':diff===0?'Oggi':diff+'gg';
   const color=diff<0?'#dc2626':diff<=7?'#d97706':'#374151';
   return `<tr>
     <td style="font-weight:600">${f.cli}</td>
-    <td style="font-family:monospace;color:#0f3460">${f.num}</td>
+    <td style="font-family:monospace;color:#0f766e">${f.num}</td>
     <td>${s.data}</td>
-    <td style="font-family:monospace;font-weight:600">${fmtE(s.imp||f.imp)}</td>
+    <td style="font-family:monospace;font-weight:600">${e(s.imp||f.imp)}</td>
     <td><span class="badge ${s.sta==='in_ritardo'||diff<0?'badge-rit':'badge-ap'}">${staLabel(s.sta)}</span></td>
     <td style="color:${color};font-weight:600">${ggTxt}</td>
   </tr>`;
 })).join('')}</tbody></table>
 </div>
-<div class="footer">GestFatture Pro · Documento generato automaticamente · ${dateStr}</div>
+<div class="footer">GestFatture Pro · Clienti · ${periodLabel} · ${dateStr}</div>
 </body></html>`;
 
-  const win=window.open('','_blank','width=900,height=700');
-  win.document.write(html);
-  win.document.close();
+  const win=window.open('','_blank','width=960,height=720');
+  win.document.write(html); win.document.close();
   win.onload=()=>{ setTimeout(()=>win.print(),400); };
-  toast('PDF pronto — verrà aperto il dialogo di stampa');
+  toast('PDF clienti pronto ('+periodLabel+')');
 }
 
 // Aggiungi al toWrap dell'autoSave
+
+// ══════════════════════════════════════════
+// RESET CONTO ECONOMICO
+// ══════════════════════════════════════════
+function resetContoEconomico(){
+  doubleConfirmDelete(
+    '🗑 Reset Conto Economico',
+    'Verranno eliminati tutti i dati di <strong>Spese Generali</strong> e <strong>Anticipi Fatture</strong>. Fatture fornitori e clienti NON verranno toccate.',
+    ()=>{
+      SPESE=[];
+      ANTICIPI=[];
+      CASTELLETTO={importo:0,tipo:'fisso',pct:80};
+      saveData();
+      rContoEconomico();
+      rSpese();
+      toast('Conto Economico azzerato');
+    }
+  );
+}
+
+// ══════════════════════════════════════════
+// CASTELLETTO
+// ══════════════════════════════════════════
+function saveCastelletto(){
+  const imp = parseFloat(document.getElementById('cast-importo')?.value)||0;
+  const tipo = document.getElementById('cast-tipo')?.value||'fisso';
+  const pct  = parseFloat(document.getElementById('cast-pct')?.value)||80;
+  CASTELLETTO = {importo:imp, tipo, pct};
+  saveData();
+  rAnticipiBars();
+}
+
+function loadCastellettoUI(){
+  const ci=document.getElementById('cast-importo');
+  const ct=document.getElementById('cast-tipo');
+  const cp=document.getElementById('cast-pct');
+  if(ci) ci.value = CASTELLETTO.importo||'';
+  if(ct) ct.value = CASTELLETTO.tipo||'fisso';
+  if(cp) cp.value = CASTELLETTO.pct||80;
+}
+
+function getCastellettoMax(){
+  if(CASTELLETTO.tipo==='percentuale'){
+    const fatAnticipiabili = FAT_CLIENTI.filter(f=>f.sta!=='incassata').reduce((s,f)=>s+f.imp,0);
+    return fatAnticipiabili * (CASTELLETTO.pct||80) / 100;
+  }
+  return CASTELLETTO.importo||0;
+}
+
+// ══════════════════════════════════════════
+// ANTICIPI FATTURE
+// ══════════════════════════════════════════
+let currentAnticipiTab = 'tutti';
+let editingAnticipoId  = null;
+
+function switchAnticipiTab(tab){
+  currentAnticipiTab=tab;
+  ['tutti','anticipi','scarichi','costi'].forEach(t=>{
+    const btn=document.getElementById('at-tab-'+t);
+    if(btn) btn.classList.toggle('active',t===tab);
+  });
+  renderAnticipiTable();
+}
+
+function rAnticipiBars(){
+  loadCastellettoUI();
+  const castMax = getCastellettoMax();
+
+  // Calcola utilizzato = anticipi aperti (non scaricati)
+  const anticipiAperti = ANTICIPI.filter(a=>a.tipo==='anticipo');
+  const scarichiTot    = ANTICIPI.filter(a=>a.tipo==='scarico').reduce((s,a)=>s+(a.imp||0),0);
+  const anticipiTot    = anticipiAperti.reduce((s,a)=>s+(a.imp||0),0);
+  const utilizzato     = Math.max(0, anticipiTot - scarichiTot);
+  const disponibile    = Math.max(0, castMax - utilizzato);
+  const commTot        = ANTICIPI.filter(a=>a.tipo==='commissione'||a.tipo==='interessi').reduce((s,a)=>s+(a.imp||0),0);
+  const pctUso         = castMax>0?Math.round(utilizzato/castMax*100):0;
+  const barCol         = pctUso>=90?'var(--red)':pctUso>=70?'var(--amber)':'linear-gradient(90deg,var(--ac),var(--teal))';
+
+  // KPI
+  const kpiEl=document.getElementById('cast-kpi');
+  if(kpiEl) kpiEl.innerHTML=[
+    {l:'Castelletto totale', v:fmtE(castMax),         ic:'🏦', c:'var(--ac2)'},
+    {l:'Anticipato aperto',  v:fmtE(utilizzato),       ic:'💰', c:'var(--amber)'},
+    {l:'Disponibile',        v:fmtE(disponibile),      ic:'✅', c:disponibile>0?'var(--green)':'var(--red)'},
+    {l:'Comm. + interessi',  v:fmtE(commTot),           ic:'💸', c:'var(--red)'},
+  ].map(k=>`<div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);padding:12px">
+    <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">${k.ic} ${k.l}</div>
+    <div style="font-family:monospace;font-size:16px;font-weight:700;color:${k.c}">${k.v}</div>
+  </div>`).join('');
+
+  // Barra
+  const bar=document.getElementById('cast-bar');
+  const pctLbl=document.getElementById('cast-pct-label');
+  const usedLbl=document.getElementById('cast-used-label');
+  const availLbl=document.getElementById('cast-avail-label');
+  if(bar){ bar.style.width=Math.min(pctUso,100)+'%'; bar.style.background=barCol; }
+  if(pctLbl) pctLbl.textContent=pctUso+'%';
+  if(usedLbl) usedLbl.textContent='Utilizzato: '+fmtE(utilizzato);
+  if(availLbl) availLbl.textContent='Disponibile: '+fmtE(disponibile);
+
+  // Aggiorna summary nel conto economico
+  const ceSumm=document.getElementById('ce-anticip-summary');
+  if(ceSumm){
+    const col=disponibile<=0?'var(--red)':pctUso>=70?'var(--amber)':'var(--green)';
+    ceSumm.innerHTML=`
+      <span style="margin-right:16px">📊 ${ANTICIPI.length} movimenti · Anticipato aperto: <strong>${fmtE(utilizzato)}</strong></span>
+      <span style="color:${col};font-weight:600">Disponibile: ${fmtE(disponibile)} (${100-pctUso}%)</span>
+      ${commTot>0?`<span style="margin-left:16px;color:var(--red)">Costi banca: ${fmtE(commTot)}</span>`:''}`;
+  }
+
+  renderAnticipiTable();
+}
+
+function renderAnticipiTable(){
+  const tb=document.getElementById('tb-anticipi'); if(!tb) return;
+  let data=[...ANTICIPI].sort((a,b)=>b.dt.localeCompare(a.dt));
+  if(currentAnticipiTab==='anticipi') data=data.filter(a=>a.tipo==='anticipo');
+  if(currentAnticipiTab==='scarichi') data=data.filter(a=>a.tipo==='scarico');
+  if(currentAnticipiTab==='costi')    data=data.filter(a=>a.tipo==='commissione'||a.tipo==='interessi');
+
+  const tipoLabel={anticipo:'💰 Anticipo',scarico:'✅ Scarico',commissione:'💸 Commissione',interessi:'📈 Interessi'};
+  const tipoCol  ={anticipo:'var(--amber)',scarico:'var(--green)',commissione:'var(--red)',interessi:'var(--red)'};
+
+  tb.innerHTML='';
+  if(!data.length){
+    tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ico">🏦</div><div style="font-size:13px">Nessun movimento anticipo</div></div></td></tr>';
+    return;
+  }
+  data.forEach(a=>{
+    const fat=a.fatId?FAT_CLIENTI.find(f=>f.id===a.fatId):null;
+    const isOpen=a.tipo==='anticipo';
+    const scaricato=isOpen?ANTICIPI.filter(x=>x.tipo==='scarico'&&x.fatId===a.fatId).reduce((s,x)=>s+(x.imp||0),0):0;
+    const residuo=isOpen?Math.max(0,(a.imp||0)-scaricato):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="font-size:12px;color:var(--tx2)">${a.dt}</td>
+      <td><span style="font-size:11px;font-weight:600;color:${tipoCol[a.tipo]||'var(--tx)'}">${tipoLabel[a.tipo]||a.tipo}</span></td>
+      <td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        ${fat?`<span style="color:var(--teal)">${fat.cli}</span><br><span style="font-size:10px;color:var(--tx3)">${fat.num}</span>`:'—'}
+      </td>
+      <td style="font-family:monospace;font-weight:600;color:${tipoCol[a.tipo]}">${fmtE(a.imp||0)}</td>
+      <td style="font-family:monospace;color:var(--tx3)">${a.mov&&a.mov!==a.imp?fmtE(a.mov):'=anticipo'}</td>
+      <td>
+        ${isOpen&&residuo!==null?
+          (residuo<=0
+            ? '<span class="badge bg">✅ Scaricato</span>'
+            : '<span class="badge ba">⏳ Aperto — residuo '+fmtE(residuo)+'</span>')
+          :''}
+      </td>
+      <td style="font-size:11px;color:var(--tx3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.nt||'—'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-xs" onclick="openMAnticipo('${a.id}')">✏️</button>
+        <button class="btn btn-xs btn-d" onclick="delAnticipo('${a.id}')">🗑</button>
+      </td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function openMAnticipo(id){
+  editingAnticipoId = id||null;
+  const a = id?ANTICIPI.find(x=>x.id===id):null;
+
+  // Popola select fatture clienti
+  const fatSel=document.getElementById('na2-fatid');
+  fatSel.innerHTML='<option value="">— Seleziona fattura —</option>';
+  FAT_CLIENTI.forEach(f=>{
+    const o=document.createElement('option');
+    o.value=f.id;
+    o.textContent=f.num+' — '+f.cli+' ('+fmtE(f.imp)+')';
+    if(a&&a.fatId===f.id) o.selected=true;
+    fatSel.appendChild(o);
+  });
+
+  document.getElementById('na2-dt').value   = a?a.dt:today();
+  document.getElementById('na2-tipo').value  = a?a.tipo:'anticipo';
+  document.getElementById('na2-imp').value   = a?a.imp:'';
+  document.getElementById('na2-mov').value   = a?(a.mov||''):'';
+  document.getElementById('na2-nt').value    = a?(a.nt||''):'';
+  document.getElementById('m-anticipo-title').textContent = a?'✏️ Modifica Movimento':'🏦 Nuovo Movimento Anticipo';
+  onAnticipoTipoChange();
+  openM('m-anticipo');
+}
+
+function onAnticipoTipoChange(){
+  const tipo=document.getElementById('na2-tipo')?.value||'anticipo';
+  const fatRow=document.getElementById('na2-fattura-row');
+  const movRow=document.getElementById('na2-mov-row');
+  const impLbl=document.getElementById('na2-imp-lbl');
+  const info=document.getElementById('na2-info');
+  const showFat = tipo==='anticipo'||tipo==='scarico';
+  if(fatRow) fatRow.style.display=showFat?'':'none';
+  if(movRow) movRow.style.display=tipo==='anticipo'?'':'none';
+  if(impLbl) impLbl.textContent = tipo==='anticipo'?'IMPORTO FATTURA ANTICIPATA *':tipo==='scarico'?'IMPORTO SCARICATO *':'IMPORTO *';
+  if(info){
+    const msgs={
+      anticipo:'La banca anticipa l\'importo della fattura. Indica l\'importo della fattura e quanto ricevi realmente dalla banca.',
+      scarico:'La fattura è stata incassata dal cliente, la banca rientra. Collegala all\'anticipo originale.',
+      commissione:'Commissioni applicate dalla banca sull\'anticipo (% o fisse).',
+      interessi:'Interessi maturati sul credito anticipato.'
+    };
+    info.textContent=msgs[tipo]||'';
+    info.style.display='block';
+  }
+}
+
+function onAnticipoImpChange(){
+  const tipo=document.getElementById('na2-tipo')?.value||'anticipo';
+  if(tipo!=='anticipo') return;
+  const imp=parseFloat(document.getElementById('na2-imp')?.value)||0;
+  const pct=CASTELLETTO.pct||80;
+  const movEl=document.getElementById('na2-mov');
+  if(movEl&&!movEl.value) movEl.placeholder='es. '+fmtE(imp*pct/100)+' ('+pct+'%)';
+}
+
+function saveMAnticipo(){
+  const dt   = document.getElementById('na2-dt').value;
+  const tipo = document.getElementById('na2-tipo').value;
+  const imp  = parseFloat(document.getElementById('na2-imp').value)||0;
+  if(!dt||!imp){ toast('Compila data e importo',false); return; }
+  const fatId= document.getElementById('na2-fatid').value||null;
+  const mov  = parseFloat(document.getElementById('na2-mov').value)||imp;
+  const nt   = document.getElementById('na2-nt').value.trim();
+
+  if(editingAnticipoId){
+    const a=ANTICIPI.find(x=>x.id===editingAnticipoId);
+    if(a){ a.dt=dt;a.tipo=tipo;a.fatId=fatId;a.imp=imp;a.mov=mov;a.nt=nt; }
+  } else {
+    ANTICIPI.unshift({id:'ANT'+Date.now()+'_'+Math.random().toString(36).slice(2,4),dt,tipo,fatId,imp,mov,nt});
+  }
+  closeM('m-anticipo');
+  rAnticipiBars();
+  renderAnticipiTable();
+  saveData();
+  toast(editingAnticipoId?'Movimento aggiornato':'Movimento aggiunto');
+  editingAnticipoId=null;
+}
+
+function delAnticipo(id){
+  const a=ANTICIPI.find(x=>x.id===id); if(!a) return;
+  doubleConfirmDelete('Eliminare il movimento?', (a.tipo||'')+' — '+fmtE(a.imp||0), ()=>{
+    ANTICIPI=ANTICIPI.filter(x=>x.id!==id);
+    rAnticipiBars(); renderAnticipiTable(); saveData(); toast('Movimento eliminato');
+  });
+}
+
+// Import anticipi da estratto conto (CSV/XLSX)
+async function importAnticipiFomEstratto(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.csv,.xlsx,.xls';
+  input.onchange=async(e)=>{
+    const file=e.target.files[0]; if(!file) return;
+    const ext=file.name.split('.').pop().toLowerCase();
+    toast('⏳ Analisi file…');
+    try{
+      let text='';
+      if(ext==='csv'){
+        text=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(file,'UTF-8'); });
+      } else {
+        if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
+        const buf=await file.arrayBuffer();
+        const wb=XLSX.read(buf,{type:'array'});
+        text=XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]],{FS:';'});
+      }
+      const sep=text.includes(';')?';':',';
+      const lines=text.split(/\r?\n/).filter(l=>l.trim());
+      if(lines.length<2){ toast('File vuoto',false); return; }
+      const header=lines[0].split(sep).map(h=>h.replace(/"/g,'').trim().toLowerCase());
+      const colData=findCol(header,['data','date','data valuta','data operazione']);
+      const colDesc=findCol(header,['descrizione','description','causale','dettaglio']);
+      const colDare=findCol(header,['dare','uscita','addebito','debit']);
+      const colAvere=findCol(header,['avere','entrata','accredito','credit']);
+      const colImp=findCol(header,['importo','amount','valore']);
+
+      let added=0, skipped=0;
+      for(let i=1;i<lines.length;i++){
+        const row=lines[i].split(sep).map(v=>v.replace(/"/g,'').trim());
+        const dateRaw=colData>=0?row[colData]:'';
+        const desc=colDesc>=0?row[colDesc]:row.join(' ');
+        const dl=desc.toLowerCase();
+        let dare=colDare>=0?parseEuro(row[colDare]):0;
+        let avere=colAvere>=0?parseEuro(row[colAvere]):0;
+        if(colImp>=0&&!dare&&!avere){ const v=parseEuro(row[colImp]); if(v<0) dare=Math.abs(v); else avere=v; }
+        const dt=parseDate(dateRaw)||today();
+        let tipo=null, imp=0;
+        const kwAnticipo=['anticipo fatt','anticip.fatt','sbf accred','anticipo su fatt','anticipo fattura','accredito anticipo','anticipi su fatt','acc.anticipo','anticipi fatture','anticipo riba','accr.anticipo'];
+        const kwScarico =['scarico anticipo','rientro anticipo','addebito anticipo','scaric. fatt','chiusura anticipo','rim.anticip','rimborso anticip','rimessa sbf','rim.sbf','scar.sbf','scarico sbf','addebito sbf','addeb.sbf','rimessa effetti','pagamento sbf','estinzione anticipo'];
+        const kwComm=['commissione anticip','spese anticip','commissioni sbf','comm.sbf','spese sbf','commissioni anticipo','provv.sbf'];
+        const kwInt=['interessi anticip','int.anticip','interessi sbf','int.sbf'];
+        if(kwAnticipo.some(k=>dl.includes(k))){ tipo='anticipo'; imp=avere||dare; }
+        else if(kwScarico.some(k=>dl.includes(k))){ tipo='scarico'; imp=dare||avere; }
+        else if(kwComm.some(k=>dl.includes(k))){ tipo='commissione'; imp=dare||avere; }
+        else if(kwInt.some(k=>dl.includes(k))){ tipo='interessi'; imp=dare||avere; }
+        if(!tipo||!imp){ skipped++; continue; }
+        // Dedup
+        if(ANTICIPI.some(a=>a.dt===dt&&a.tipo===tipo&&Math.abs((a.imp||0)-imp)<1.0&&a.fonte==='estratto')){
+          skipped++; continue;
+        }
+        ANTICIPI.unshift({id:'ANT'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,4),
+          dt,tipo,fatId:null,imp,mov:imp,nt:'Da estratto: '+desc.slice(0,60),fonte:'estratto'});
+        added++;
+      }
+      rAnticipiBars(); renderAnticipiTable(); saveData();
+      toast('✓ '+added+' movimenti anticipi importati'+(skipped?' ('+skipped+' righe non riconosciute)':''));
+    }catch(e){ toast('Errore: '+e.message,false); }
+  };
+  input.click();
+}
+
+function exportAnticipiXlsx(){
+  if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
+  const castMax=getCastellettoMax();
+  const tipoLabel={anticipo:'Anticipo',scarico:'Scarico',commissione:'Commissione',interessi:'Interessi'};
+  const wsData=[['Data','Tipo','Cliente','N° Fattura','Importo','Importo ricevuto','Note']];
+  [...ANTICIPI].sort((a,b)=>b.dt.localeCompare(a.dt)).forEach(a=>{
+    const fat=a.fatId?FAT_CLIENTI.find(f=>f.id===a.fatId):null;
+    wsData.push([a.dt,tipoLabel[a.tipo]||a.tipo,fat?fat.cli:'',fat?fat.num:'',a.imp||0,a.mov||a.imp||0,a.nt||'']);
+  });
+  // Riepilogo
+  const anticipiTot=ANTICIPI.filter(x=>x.tipo==='anticipo').reduce((s,a)=>s+(a.imp||0),0);
+  const scarichiTot=ANTICIPI.filter(x=>x.tipo==='scarico').reduce((s,a)=>s+(a.imp||0),0);
+  const commTot=ANTICIPI.filter(x=>x.tipo==='commissione'||x.tipo==='interessi').reduce((s,a)=>s+(a.imp||0),0);
+  wsData.push([],[],[]);
+  wsData.push(['RIEPILOGO CASTELLETTO']);
+  wsData.push(['Castelletto totale',castMax]);
+  wsData.push(['Totale anticipato',anticipiTot]);
+  wsData.push(['Totale scaricato',scarichiTot]);
+  wsData.push(['Aperto (anticipato - scaricato)',Math.max(0,anticipiTot-scarichiTot)]);
+  wsData.push(['Disponibile',Math.max(0,castMax-(anticipiTot-scarichiTot))]);
+  wsData.push(['Commissioni + interessi',commTot]);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols']=[{wch:12},{wch:14},{wch:28},{wch:16},{wch:14},{wch:16},{wch:35}];
+  XLSX.utils.book_append_sheet(wb,ws,'Anticipi Fatture');
+  XLSX.writeFile(wb,'anticipi_fatture_'+today()+'.xlsx');
+  toast('XLSX anticipi esportato');
+}
+
+// ══════════════════════════════════════════
+// SPESE GENERALI
+// ══════════════════════════════════════════
+
+let editingSpesaId = null;
+
+function openMSpesa(id){
+  editingSpesaId = id || null;
+  const s = id ? SPESE.find(x=>x.id===id) : null;
+  document.getElementById('m-spesa-title').textContent = s ? '✏️ Modifica Spesa' : '💸 Nuova Spesa Generale';
+  document.getElementById('ns-dt').value   = s ? s.dt  : today();
+  document.getElementById('ns-imp').value  = s ? s.imp : '';
+  document.getElementById('ns-desc').value = s ? s.desc: '';
+  document.getElementById('ns-cat').value  = s ? s.cat : 'utenze';
+  document.getElementById('ns-ric').value  = s ? (s.ric||'') : '';
+  document.getElementById('ns-nt').value   = s ? (s.nt||'') : '';
+  openM('m-spesa');
+}
+
+function saveMSpesa(){
+  const dt   = document.getElementById('ns-dt').value;
+  const imp  = parseFloat(document.getElementById('ns-imp').value)||0;
+  const desc = document.getElementById('ns-desc').value.trim();
+  const cat  = document.getElementById('ns-cat').value;
+  if(!dt||!imp||!desc){ toast('Compila i campi obbligatori',false); return; }
+  const ric  = document.getElementById('ns-ric').value;
+  const nt   = document.getElementById('ns-nt').value.trim();
+  if(editingSpesaId){
+    const s=SPESE.find(x=>x.id===editingSpesaId);
+    if(s){ s.dt=dt;s.imp=imp;s.desc=desc;s.cat=cat;s.ric=ric;s.nt=nt; }
+  } else {
+    SPESE.unshift({id:'SP'+Date.now()+'_'+Math.random().toString(36).slice(2,5),dt,desc,cat,imp,ric,nt,fonte:'manuale'});
+  }
+  closeM('m-spesa');
+  rSpese();
+  saveData();
+  toast(editingSpesaId?'Spesa aggiornata':'Spesa aggiunta: '+desc);
+  editingSpesaId=null;
+}
+
+function delSpesa(id){
+  const s=SPESE.find(x=>x.id===id); if(!s) return;
+  doubleConfirmDelete('Eliminare la spesa?', s.desc, ()=>{
+    SPESE=SPESE.filter(x=>x.id!==id);
+    rSpese(); saveData(); toast('Spesa eliminata');
+  });
+}
+
+function resetSpese(){
+  ['ss-cat','ss-yr'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('ss-q').value='';
+  rSpese();
+}
+
+function rSpese(){
+  // Popola anni
+  const yrSel=document.getElementById('ss-yr');
+  const years=[...new Set(SPESE.map(s=>s.dt.slice(0,4)))].sort().reverse();
+  const curYr=yrSel?yrSel.value:'';
+  if(yrSel){
+    yrSel.innerHTML='<option value="">Tutti gli anni</option>';
+    years.forEach(y=>{ const o=document.createElement('option');o.value=y;o.textContent=y;yrSel.appendChild(o); });
+    if(curYr) yrSel.value=curYr;
+  }
+  // Popola categorie select
+  const catSel=document.getElementById('ss-cat');
+  if(catSel&&catSel.options.length<=1){
+    Object.entries(SPESE_CAT).forEach(([k,v])=>{
+      const o=document.createElement('option');o.value=k;o.textContent=v.ic+' '+v.label;catSel.appendChild(o);
+    });
+  }
+
+  // Filtra
+  const cat=catSel?catSel.value:'';
+  const yr=yrSel?yrSel.value:'';
+  const q=(document.getElementById('ss-q')?.value||'').toLowerCase();
+  let data=SPESE;
+  if(cat) data=data.filter(s=>s.cat===cat);
+  if(yr)  data=data.filter(s=>s.dt.startsWith(yr));
+  if(q)   data=data.filter(s=>s.desc.toLowerCase().includes(q)||(s.nt||'').toLowerCase().includes(q));
+
+  // KPI
+  const tot=data.reduce((s,x)=>s+x.imp,0);
+  const byCat={};
+  data.forEach(s=>{ byCat[s.cat]=(byCat[s.cat]||0)+s.imp; });
+  const topCat=Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0];
+  const ricorrenti=data.filter(s=>s.ric).reduce((s,x)=>s+x.imp,0);
+
+  const kpiEl=document.getElementById('sp-kpi');
+  if(kpiEl) kpiEl.innerHTML=[
+    {l:'Totale spese',v:fmtE(tot),ic:'💸',c:'--red'},
+    {l:'Categoria top',v:topCat?SPESE_CAT[topCat[0]]?.ic+' '+fmtE(topCat[1]):'—',ic:'📊',c:'--amber'},
+    {l:'Spese ricorrenti',v:fmtE(ricorrenti),ic:'🔄',c:'--violet'},
+    {l:'N° voci',v:data.length,ic:'📋',c:'--tx2'},
+  ].map(k=>`<div class="kcard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(${k.c})"></div>
+    <div class="kcard-ico">${k.ic}</div><div class="kcard-lbl">${k.l}</div>
+    <div class="kcard-val" style="color:var(${k.c})">${k.v}</div></div>`).join('');
+
+  // Grafico mensile
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const mData=Array(12).fill(0);
+  data.forEach(s=>{ const m=new Date(s.dt).getMonth(); if(!isNaN(m)) mData[m]+=s.imp; });
+  const mc=document.getElementById('sp-ch-monthly');
+  if(mc) setTimeout(()=>mkBarChart(mc,months,mData,'rgba(248,113,113,.7)',200),10);
+
+  // Donut categoria
+  const catEntries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const dc=document.getElementById('sp-ch-donut');
+  if(dc) setTimeout(()=>{
+    dc.innerHTML=mkDonut(dc,
+      catEntries.map(([k])=>SPESE_CAT[k]?.ic+' '+(SPESE_CAT[k]?.label||k)),
+      catEntries.map(([,v])=>v),
+      catEntries.map(([k])=>SPESE_CAT[k]?.col||'#888'),
+      160);
+  },10);
+
+  // Tabella
+  const tb=document.getElementById('tb-spese'); if(!tb) return;
+  tb.innerHTML='';
+  if(!data.length){
+    tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-ico">💸</div><div style="font-size:13px">Nessuna spesa trovata</div></div></td></tr>';
+    return;
+  }
+  [...data].sort((a,b)=>b.dt.localeCompare(a.dt)).forEach(s=>{
+    const cat=SPESE_CAT[s.cat]||{ic:'📦',label:s.cat,col:'#888'};
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="font-size:12px;color:var(--tx2)">${s.dt}</td>
+      <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.desc}
+        ${s.fonte&&s.fonte!=='manuale'?'<span class="badge bb" style="font-size:9px;margin-left:4px">estratto</span>':''}
+      </td>
+      <td><span class="badge" style="background:${cat.col}18;color:${cat.col};border:1px solid ${cat.col}33">${cat.ic} ${cat.label}</span></td>
+      <td style="font-family:monospace;font-weight:600;color:var(--red)">${fmtE(s.imp)}</td>
+      <td style="font-size:11px;color:var(--tx3)">${s.ric?'🔄 '+s.ric:'—'}</td>
+      <td style="font-size:11px;color:var(--tx3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.nt||'—'}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn btn-xs" onclick="openMSpesa('${s.id}')">✏️</button>
+        <button class="btn btn-xs btn-d" onclick="delSpesa('${s.id}')">🗑</button>
+      </td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ── IMPORT SPESE DA CSV/XLSX ──────────────────────────────────────────────
+async function importSpeseFile(files){
+  if(!files||!files.length) return;
+  const file=files[0];
+  const ext=file.name.split('.').pop().toLowerCase();
+  toast('⏳ Lettura file…');
+  try{
+    let text='';
+    if(ext==='csv'){
+      text=await new Promise((res,rej)=>{
+        const r=new FileReader();
+        r.onload=e=>res(e.target.result);
+        r.onerror=rej;
+        r.readAsText(file,'UTF-8');
+      });
+    } else {
+      if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array'});
+      text=XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]],{FS:';'});
+    }
+    parseSpeseFromText(text, file.name);
+  }catch(e){ toast('Errore: '+e.message,false); }
+}
+
+async function importSpeseFilePdf(files){
+  if(!files||!files.length) return;
+  toast('⏳ Analisi PDF con AI — estraggo spese e anticipi…');
+  try{
+    await ensurePdfJs();
+    const images=await pdfToImages(files[0],2.0);
+    let rawText='';
+    try{ rawText=await extractPdfText(files[0]); }catch(e){}
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:4000,
+        messages:[{role:'user',content:[
+          ...images.map(b64=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}})),
+          {type:'text',text:`Questo è un estratto conto bancario italiano. Analizza TUTTI i movimenti e classificali in due gruppi:
+
+1. SPESE GENERALI: utenze (luce/gas/acqua/telefono/internet), stipendi/contributi, affitto/leasing, spese bancarie (tenuta conto, bollo), tasse/F24 imposte, spese varie. ESCLUDI pagamenti a fornitori di merce.
+
+2. ANTICIPI FATTURE: qualsiasi movimento relativo ad anticipo fatture / SBF / ricevute bancarie. Include:
+   - "anticipo" = la banca anticipa denaro su una fattura (accredito)
+   - "scarico" = rientro/rimborso dell'anticipo (addebito)
+   - "commissione" = commissioni/spese sull'anticipo
+   - "interessi" = interessi sul credito anticipato
+
+Rispondi SOLO con questo JSON (nessun testo prima/dopo):
+{
+  "spese": [{"dt":"YYYY-MM-DD","desc":"...","imp":0.00,"cat":"utenze|stipendi|affitto|banca|tasse|varie"}],
+  "anticipi": [{"dt":"YYYY-MM-DD","desc":"...","imp":0.00,"tipo":"anticipo|scarico|commissione|interessi"}]
+}
+- imp è sempre positivo
+- Per anticipi: tipo "anticipo" se la banca accredita, "scarico" se addebita rientrando
+- Ignora bonifici a fornitori, pagamenti merci, accrediti clienti normali
+${rawText?'\n\nTesto estratto:\n'+rawText.slice(0,3000):''}` }
+        ]}]
+      })
+    });
+    const data=await response.json();
+    if(data.error) throw new Error(data.error.message);
+    const txt=(data.content||[]).map(b=>b.text||'').join('');
+    const parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());
+
+    let addedSpese=0, addedAnticip=0;
+
+    // Inserisci spese generali
+    (parsed.spese||[]).forEach(item=>{
+      if(!item.dt||!item.imp||!item.desc) return;
+      SPESE.unshift({
+        id:'SP'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+        dt:item.dt, desc:item.desc, cat:item.cat||'varie',
+        imp:parseFloat(item.imp)||0, ric:'', nt:'Da PDF estratto conto', fonte:'estratto'
+      });
+      addedSpese++;
+    });
+
+    // Inserisci anticipi
+    (parsed.anticipi||[]).forEach(item=>{
+      if(!item.dt||!item.imp) return;
+      const imp=parseFloat(item.imp)||0;
+      const tipo=item.tipo||'anticipo';
+      // Dedup
+      if(ANTICIPI.some(a=>a.dt===item.dt&&a.tipo===tipo&&Math.abs((a.imp||0)-imp)<1.0&&a.fonte==='estratto')){
+        return;
+      }
+      ANTICIPI.unshift({
+        id:'ANT'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+        dt:item.dt, tipo, fatId:null, imp, mov:imp,
+        nt:'Da PDF: '+(item.desc||'').slice(0,80), fonte:'estratto'
+      });
+      addedAnticip++;
+    });
+
+    rSpese();
+    if(addedAnticip>0){ rAnticipiBars(); renderAnticipiTable(); }
+    saveData();
+
+    const parts=[];
+    if(addedSpese>0)   parts.push(addedSpese+' spese generali');
+    if(addedAnticip>0) parts.push(addedAnticip+' movimenti anticipi');
+    toast('✓ PDF analizzato: '+(parts.join(' · ')||'nessun dato trovato'));
+  }catch(e){ toast('Errore AI: '+e.message,false); console.error(e); }
+}
+
+function parseSpeseFromText(text, fname, debugMode=false){
+  const sep=text.includes(';')?';':',';
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2){ toast('File vuoto o non riconoscibile',false); return; }
+  const header=lines[0].split(sep).map(h=>h.replace(/"/g,'').trim().toLowerCase());
+  const colData =findCol(header,['data','date','data valuta','data operazione']);
+  const colDesc =findCol(header,['descrizione','description','causale','dettaglio','operazione']);
+  const colDare =findCol(header,['dare','uscita','addebito','debit','spesa']);
+  const colAvere=findCol(header,['avere','entrata','accredito','credit']);
+  const colImp  =findCol(header,['importo','amount','valore']);
+
+  // ── Keyword anticipi / scarichi ──────────────────────────────────────────
+  // KEYWORD REALI dal tuo estratto conto:
+  // Anticipi:  "ant.portaf.sbf", "antic.su fatt.italia", "anticipo fatt", "sbf accred"
+  // Scarichi:  "scarico antic/fatt.", "scarico anticipo", "rimessa sbf"
+  const kwAnticipo  =[
+    'ant.portaf','antic.su fatt','anticipo fatt','anticip.fatt','sbf accred',
+    'anticipo su fatt','anticipo fattura','accredito anticipo','anticipi su fatt',
+    'acc.anticipo','anticipi fatture','anticipo riba','accr.anticipo',
+    'anticipo su ric','antic.su ric','portaf.sbf','portafoglio sbf'
+  ];
+  const kwScarico   =[
+    'scarico antic','scarico antic/fatt','scarico ant','scar.antic',
+    'scarico anticipo','rientro anticipo','addebito anticipo','scaric. fatt',
+    'chiusura anticipo','rim.anticip','rimborso anticip','rimessa sbf',
+    'rim.sbf','scar.sbf','scarico sbf','addebito sbf','addeb.sbf',
+    'rimessa effetti','pagamento sbf','estinzione anticipo','scarico fatt'
+  ];
+  const kwCommAntic =[
+    'commissione anticip','spese anticip','commissioni sbf','comm.sbf',
+    'spese sbf','commissioni anticipo','provv.sbf','provvigioni sbf',
+    'competenze sbf','comp.sbf'
+  ];
+  const kwIntAntic  =[
+    'interessi anticip','int.anticip','interessi sbf','int.sbf',
+    'interessi su anticip','oneri sbf'
+  ];
+
+  // Helper dedup: controlla se esiste già un record con stessa data, tipo e importo (±1€)
+  const isDuplicateAnticipo=(dt,tipo,imp)=> ANTICIPI.some(a=>
+    a.dt===dt && a.tipo===tipo && Math.abs((a.imp||0)-imp)<1.0 && a.fonte==='estratto'
+  );
+  const isDuplicateSpesa=(dt,imp,desc)=> SPESE.some(s=>
+    s.dt===dt && Math.abs((s.imp||0)-imp)<0.01 && s.fonte==='estratto' &&
+    s.desc.toLowerCase().slice(0,20)===desc.toLowerCase().slice(0,20)
+  );
+
+  // ── Keyword spese generali ───────────────────────────────────────────────
+  const catMap=[
+    {cat:'stipendi', kw:['stipend','salari','contribut','inps','f24 contrib','retribuz','cedolino','emolum']},
+    {cat:'utenze',   kw:['enel','eni','a2a','tim','vodafone','fastweb','wind','internet','luce ','gas ','acqua','telefon','bolletta','hera','iren','acea','sorgenia','illumia']},
+    {cat:'affitto',  kw:['affitto','locazione','canone loc','leasing','rent','pigione']},
+    {cat:'banca',    kw:['tenuta conto','canone carta','bollo','imposta sostitutiva','spese banca','commissione bon','ccp ']},
+    {cat:'tasse',    kw:['f24','agenzia entrate','irap','ires',' iva ','tari','imu','comune di','ravvedimento','cartella','equitalia','agenzia riscoss']},
+  ];
+  const guesscat=(d)=>{
+    for(const {cat,kw} of catMap) if(kw.some(k=>d.includes(k))) return cat;
+    return 'varie';
+  };
+
+  // ── Keyword da IGNORARE (pagamenti fornitori, accrediti clienti normali) ──
+  const kwIgnora=[
+    'bonifico a ','pag.fatt','ritenuta acconto','nostra provv',
+    'disp.giro','sist.ne op','accredito stipend','vers.contanti',
+    'prelievo ','atm '
+  ];
+
+  let addedSpese=0, addedAnticip=0, skipped=0, duplicati=0;
+  const debugLog=[];
+
+  for(let i=1;i<lines.length;i++){
+    const row=lines[i].split(sep).map(v=>v.replace(/"/g,'').trim());
+    const dateRaw=colData>=0?row[colData]:'';
+    const desc   =colDesc>=0?row[colDesc]:row.join(' ');
+    const dl     =desc.toLowerCase();
+    const dt     =parseDate(dateRaw)||today();
+
+    let dare =colDare>=0 ?parseEuro(row[colDare]) :0;
+    let avere=colAvere>=0?parseEuro(row[colAvere]):0;
+    if(colImp>=0&&!dare&&!avere){
+      const v=parseEuro(row[colImp]);
+      if(v<0) dare=Math.abs(v); else if(v>0) avere=v;
+    }
+    // Gestisci il caso in cui dare o avere contengano valori negativi
+    // (alcune banche usano una sola colonna "importo" con segno)
+    if(dare<0){ avere=Math.abs(dare); dare=0; }
+    if(avere<0){ dare=Math.abs(avere); avere=0; }
+
+    // ── 1. Riconosci anticipi (accrediti dalla banca) ──────────────────────
+    if(kwAnticipo.some(k=>dl.includes(k))){
+      const imp=avere||dare; if(!imp){ skipped++; debugLog.push({dt,desc,dare,avere,cls:'⏭ SKIP (imp=0)'}); continue; }
+      if(isDuplicateAnticipo(dt,'anticipo',imp)){ duplicati++; debugLog.push({dt,desc,dare,avere,cls:'🔁 DUP anticipo'}); continue; }
+      ANTICIPI.unshift({
+        id:'ANT'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,4),
+        dt, tipo:'anticipo', fatId:null, imp, mov:imp,
+        nt:'Da estratto: '+desc.slice(0,80), fonte:'estratto'
+      });
+      debugLog.push({dt,desc,dare,avere,cls:'💰 ANTICIPO'});
+      addedAnticip++; continue;
+    }
+
+    // ── 2. Riconosci scarichi anticipo ─────────────────────────────────────
+    if(kwScarico.some(k=>dl.includes(k))){
+      const imp=dare||avere; if(!imp){ skipped++; debugLog.push({dt,desc,dare,avere,cls:'⏭ SKIP scarico imp=0'}); continue; }
+      if(isDuplicateAnticipo(dt,'scarico',imp)){ duplicati++; debugLog.push({dt,desc,dare,avere,cls:'🔁 DUP scarico'}); continue; }
+      ANTICIPI.unshift({
+        id:'ANT'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,4),
+        dt, tipo:'scarico', fatId:null, imp, mov:imp,
+        nt:'Da estratto: '+desc.slice(0,80), fonte:'estratto'
+      });
+      debugLog.push({dt,desc,dare,avere,cls:'✅ SCARICO'});
+      addedAnticip++; continue;
+    }
+
+    // ── 3. Riconosci commissioni anticipo ──────────────────────────────────
+    if(kwCommAntic.some(k=>dl.includes(k))){
+      const imp=dare||avere; if(!imp){ skipped++; debugLog.push({dt,desc,dare,avere,cls:'⏭ SKIP comm imp=0'}); continue; }
+      if(isDuplicateAnticipo(dt,'commissione',imp)){ duplicati++; debugLog.push({dt,desc,dare,avere,cls:'🔁 DUP comm'}); continue; }
+      ANTICIPI.unshift({
+        id:'ANT'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,4),
+        dt, tipo:'commissione', fatId:null, imp, mov:imp,
+        nt:'Da estratto: '+desc.slice(0,80), fonte:'estratto'
+      });
+      debugLog.push({dt,desc,dare,avere,cls:'💸 COMMISSIONE'});
+      addedAnticip++; continue;
+    }
+
+    // ── 4. Riconosci interessi anticipo ────────────────────────────────────
+    if(kwIntAntic.some(k=>dl.includes(k))){
+      const imp=dare||avere; if(!imp){ skipped++; debugLog.push({dt,desc,dare,avere,cls:'⏭ SKIP int imp=0'}); continue; }
+      if(isDuplicateAnticipo(dt,'interessi',imp)){ duplicati++; debugLog.push({dt,desc,dare,avere,cls:'🔁 DUP int'}); continue; }
+      ANTICIPI.unshift({
+        id:'ANT'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,4),
+        dt, tipo:'interessi', fatId:null, imp, mov:imp,
+        nt:'Da estratto: '+desc.slice(0,80), fonte:'estratto'
+      });
+      debugLog.push({dt,desc,dare,avere,cls:'📈 INTERESSI'});
+      addedAnticip++; continue;
+    }
+
+    // ── 5. Ignora pagamenti fornitori e accrediti normali ──────────────────
+    if(kwIgnora.some(k=>dl.includes(k))&&!catMap.some(({kw})=>kw.some(k=>dl.includes(k)))){
+      debugLog.push({dt,desc,dare,avere,cls:'⏭ IGN fornitore'});
+      skipped++; continue;
+    }
+    if(avere>0&&!dare){
+      debugLog.push({dt,desc,dare,avere,cls:'⏭ IGN accredito'});
+      skipped++; continue;
+    }
+
+    // ── 6. Spesa generale ──────────────────────────────────────────────────
+    const imp=dare; if(!imp||imp<=0){ skipped++; debugLog.push({dt,desc,dare,avere,cls:'⏭ SKIP imp≤0'}); continue; }
+    if(isDuplicateSpesa(dt,imp,desc)){ duplicati++; debugLog.push({dt,desc,dare,avere,cls:'🔁 DUP spesa'}); continue; }
+    SPESE.unshift({
+      id:'SP'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,4),
+      dt, desc, cat:guesscat(dl), imp, ric:'', nt:'Da '+fname, fonte:'estratto'
+    });
+    debugLog.push({dt,desc,dare,avere,cls:'💸 SPESA ('+guesscat(dl)+')'});
+    addedSpese++;
+  }
+
+  rSpese();
+  if(addedAnticip>0){ rAnticipiBars(); renderAnticipiTable(); }
+  saveData();
+
+  // Toast riepilogativo
+  const parts=[];
+  if(addedSpese>0)   parts.push(addedSpese+' spese generali');
+  if(addedAnticip>0) parts.push(addedAnticip+' movimenti anticipi');
+  if(duplicati>0)    parts.push(duplicati+' duplicati saltati');
+  if(skipped>0)      parts.push(skipped+' righe ignorate');
+  toast('✓ '+fname+': '+parts.join(' · '));
+
+  // Mostra sempre il log di debug per verificare la classificazione
+  showImportDebug(debugLog, fname, header.join(', '));
+}
+
+function showImportDebug(log, fname, headerStr){
+  // Rimuovi modal precedente se esiste
+  document.getElementById('m-import-debug')?.remove();
+  const ov=document.createElement('div');
+  ov.id='m-import-debug';
+  ov.className='mover';
+  ov.style.zIndex='9999';
+
+  const clsColors={
+    '💰 ANTICIPO':'rgba(56,189,248,.15)',
+    '✅ SCARICO':'rgba(52,211,153,.15)',
+    '💸 COMMISSIONE':'rgba(248,113,113,.12)',
+    '📈 INTERESSI':'rgba(248,113,113,.12)',
+  };
+
+  ov.innerHTML=`
+    <div class="modal" style="width:820px;max-width:97vw;max-height:90dvh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="mtitle" style="margin-bottom:0">🔍 Debug import: ${fname}</div>
+        <button class="btn btn-xs" onclick="document.getElementById('m-import-debug').remove()">✕ Chiudi</button>
+      </div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">Intestazioni rilevate: <code>${headerStr}</code></div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">${log.length} righe analizzate — se una voce è classificata male, comunicami la descrizione esatta della riga.</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="background:var(--bg3)">
+            <th style="padding:6px 8px;text-align:left;white-space:nowrap">Data</th>
+            <th style="padding:6px 8px;text-align:left">Descrizione</th>
+            <th style="padding:6px 8px;text-align:right;white-space:nowrap">Dare</th>
+            <th style="padding:6px 8px;text-align:right;white-space:nowrap">Avere</th>
+            <th style="padding:6px 8px;text-align:left;white-space:nowrap">Classificato come</th>
+          </tr></thead>
+          <tbody>
+            ${log.map(r=>{
+              const bg=clsColors[r.cls]||'transparent';
+              const clsCol=r.cls.startsWith('⏭')||r.cls.startsWith('🔁')?'var(--tx3)':
+                r.cls.includes('ANTICIPO')?'var(--ac2)':
+                r.cls.includes('SCARICO')?'var(--green)':
+                r.cls.includes('SPESA')?'var(--amber)':'var(--red)';
+              return `<tr style="background:${bg};border-bottom:1px solid var(--br)">
+                <td style="padding:5px 8px;color:var(--tx3);white-space:nowrap">${r.dt}</td>
+                <td style="padding:5px 8px;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.desc}">${r.desc}</td>
+                <td style="padding:5px 8px;text-align:right;font-family:monospace;color:var(--red)">${r.dare>0?r.dare.toFixed(2):''}</td>
+                <td style="padding:5px 8px;text-align:right;font-family:monospace;color:var(--green)">${r.avere>0?r.avere.toFixed(2):''}</td>
+                <td style="padding:5px 8px;font-weight:600;color:${clsCol};white-space:nowrap">${r.cls}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+// ── EXPORT SPESE ──────────────────────────────────────────────────────────
+function exportSpeseXlsx(){
+  if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
+  const wsData=[['Data','Descrizione','Categoria','Importo €','Ricorrente','Note','Fonte']];
+  SPESE.sort((a,b)=>b.dt.localeCompare(a.dt)).forEach(s=>{
+    wsData.push([s.dt,s.desc,SPESE_CAT[s.cat]?.label||s.cat,s.imp,s.ric||'',s.nt||'',s.fonte||'manuale']);
+  });
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols']=[{wch:12},{wch:35},{wch:22},{wch:12},{wch:14},{wch:30},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws,'Spese Generali');
+  XLSX.writeFile(wb,'spese_generali_'+today()+'.xlsx');
+  toast('Spese esportate in XLSX');
+}
+
+function exportSpesePdf(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+  const tot=SPESE.reduce((s,x)=>s+x.imp,0);
+  const byCat={};
+  SPESE.forEach(s=>{ byCat[s.cat]=(byCat[s.cat]||0)+s.imp; });
+  const e=v=>fmtE(v);
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Spese Generali</title>
+<style>
+body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a2e;margin:0}
+.header{background:#dc2626;color:#fff;padding:24px 32px}
+.header h1{margin:0 0 4px;font-size:22px;font-weight:800}
+.header p{margin:0;font-size:11px;opacity:.8}
+.kpi-row{display:flex;background:#fef2f2;border-bottom:1px solid #fecaca}
+.kpi{flex:1;padding:14px 20px;border-right:1px solid #fecaca;text-align:center}
+.kpi:last-child{border-right:none}
+.kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;font-weight:600;margin-bottom:4px}
+.kpi-val{font-size:18px;font-weight:800;color:#dc2626}
+.section{padding:16px 32px}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#374151;margin-bottom:10px;border-bottom:2px solid #e5e7eb;padding-bottom:5px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{background:#f3f4f6;padding:7px 10px;text-align:left;font-weight:600;font-size:9px;color:#6b7280;border-bottom:2px solid #e5e7eb;text-transform:uppercase}
+tbody tr:nth-child(even){background:#fafafa}
+td{padding:6px 10px;border-bottom:1px solid #f3f4f6}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:600;background:#fee2e2;color:#dc2626}
+.footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:10px 32px;font-size:10px;color:#9ca3af;text-align:center}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div class="header"><h1>💸 Spese Generali</h1><p>Generato il ${dateStr} · ${SPESE.length} voci · GestFatture Pro</p></div>
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-lbl">Totale spese</div><div class="kpi-val">${e(tot)}</div></div>
+  ${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>`
+  <div class="kpi"><div class="kpi-lbl">${SPESE_CAT[k]?.ic||''} ${SPESE_CAT[k]?.label||k}</div><div class="kpi-val" style="font-size:14px">${e(v)}</div></div>`).join('')}
+</div>
+<div class="section">
+  <div class="section-title">Elenco spese</div>
+  <table><thead><tr><th>Data</th><th>Descrizione</th><th>Categoria</th><th>Importo</th><th>Ricorrente</th><th>Note</th></tr></thead>
+  <tbody>${[...SPESE].sort((a,b)=>b.dt.localeCompare(a.dt)).map(s=>`<tr>
+    <td>${s.dt}</td>
+    <td style="font-weight:600">${s.desc}</td>
+    <td>${SPESE_CAT[s.cat]?.ic||''} ${SPESE_CAT[s.cat]?.label||s.cat}</td>
+    <td style="font-family:monospace;font-weight:700;color:#dc2626">${e(s.imp)}</td>
+    <td>${s.ric||'—'}</td>
+    <td style="color:#6b7280">${s.nt||'—'}</td>
+  </tr>`).join('')}</tbody></table>
+</div>
+<div class="footer">GestFatture Pro · Spese Generali · ${dateStr}</div>
+</body></html>`;
+  const win=window.open('','_blank','width=900,height=700');
+  win.document.write(html); win.document.close();
+  win.onload=()=>{ setTimeout(()=>win.print(),400); };
+  toast('PDF Spese pronto');
+}
+
+// ══════════════════════════════════════════
+// CONTO ECONOMICO
+// ══════════════════════════════════════════
+// Helper: restituisce solo le spese generali reali, escludendo voci di anticipo/scarico
+// che non devono entrare nel conto economico (sono movimenti finanziari, non costi)
+function speseCE(yr){
+  const kwEscludi=['anticipo fatt','anticip','sbf','scarico anticip','rientro anticip','rimessa sbf','rim.sbf','estinzione anticip','addebito anticip','commissioni sbf','interessi sbf'];
+  return SPESE.filter(s=>{
+    if(yr && !s.dt.startsWith(yr)) return false;
+    const dl=(s.nt||'').toLowerCase()+' '+(s.desc||'').toLowerCase();
+    if(kwEscludi.some(k=>dl.includes(k))) return false;
+    return true;
+  });
+}
+
+function rContoEconomico(){
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+
+  // Anno selezionato
+  const allYears=[...new Set([
+    ...FAT.map(f=>f.dt.slice(0,4)),
+    ...FAT_CLIENTI.map(f=>f.dt.slice(0,4)),
+    ...SPESE.map(s=>s.dt.slice(0,4)),
+  ])].filter(Boolean).sort().reverse();
+
+  const yrSel=document.getElementById('ce-yr');
+  if(yrSel&&yrSel.options.length<=1){
+    allYears.forEach(y=>{ const o=document.createElement('option');o.value=y;o.textContent=y;yrSel.appendChild(o); });
+  }
+  const yr=yrSel?yrSel.value||(allYears[0]||new Date().getFullYear().toString()):allYears[0]||'2024';
+
+  // ── Dati per anno ────────────────────────
+  const ricaviTot  = FAT_CLIENTI.filter(f=>f.dt.startsWith(yr)).reduce((s,f)=>s+f.imp,0);
+  const ricaviInc  = FAT_CLIENTI.filter(f=>f.dt.startsWith(yr)&&f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const acquistiTot= FAT.filter(f=>f.dt.startsWith(yr)).reduce((s,f)=>s+f.imp,0);
+  const speseTot   = speseCE(yr).reduce((a,s)=>a+s.imp,0);
+  const costiTot   = acquistiTot+speseTot;
+  const margine    = ricaviTot-costiTot;
+  const margPct    = ricaviTot>0?Math.round(margine/ricaviTot*100):0;
+
+  // Spese per categoria
+  const spesePerCat={};
+  speseCE(yr).forEach(s=>{ spesePerCat[s.cat]=(spesePerCat[s.cat]||0)+s.imp; });
+
+  // ── Hero ────────────────────────────────
+  const hero=document.getElementById('ce-hero');
+  if(hero) hero.innerHTML=`
+    <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px">Risultato economico ${yr}</div>
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="font-size:36px;font-weight:800;letter-spacing:-1px;color:${margine>=0?'var(--green)':'var(--red)'}">
+        ${margine>=0?'▲':'▼'} ${fmtE(Math.abs(margine))}
+      </div>
+      <div style="font-size:14px;color:${margine>=0?'var(--green)':'var(--red)'};font-weight:600">
+        ${margine>=0?'Utile':'Perdita'} — margine ${margPct}%
+      </div>
+    </div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+      <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px">Ricavi (fatturato)</div><div style="font-family:monospace;font-size:16px;font-weight:700;color:var(--green);margin-top:2px">${fmtE(ricaviTot)}</div></div>
+      <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px">di cui incassato</div><div style="font-family:monospace;font-size:16px;font-weight:700;color:var(--teal);margin-top:2px">${fmtE(ricaviInc)}</div></div>
+      <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px">Acquisti fornitori</div><div style="font-family:monospace;font-size:16px;font-weight:700;color:var(--amber);margin-top:2px">${fmtE(acquistiTot)}</div></div>
+      <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px">Spese generali</div><div style="font-family:monospace;font-size:16px;font-weight:700;color:var(--violet);margin-top:2px">${fmtE(speseTot)}</div></div>
+      <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px">Totale costi</div><div style="font-family:monospace;font-size:16px;font-weight:700;color:var(--red);margin-top:2px">${fmtE(costiTot)}</div></div>
+    </div>`;
+
+  // ── Colonna ricavi ───────────────────────
+  const ceRicavi=document.getElementById('ce-ricavi');
+  if(ceRicavi){
+    const cliMap={};
+    FAT_CLIENTI.filter(f=>f.dt.startsWith(yr)).forEach(f=>{ cliMap[f.cli]=(cliMap[f.cli]||0)+f.imp; });
+    const topCli=Object.entries(cliMap).sort((a,b)=>b[1]-a[1]);
+    ceRicavi.innerHTML=`
+      <div class="sr"><span style="font-weight:600">Totale fatturato clienti</span><span style="font-family:monospace;font-weight:700;color:var(--green)">${fmtE(ricaviTot)}</span></div>
+      <div class="sr"><span style="color:var(--tx3)">di cui incassato</span><span style="font-family:monospace;color:var(--teal)">${fmtE(ricaviInc)}</span></div>
+      <div class="sr"><span style="color:var(--tx3)">da incassare</span><span style="font-family:monospace;color:var(--amber)">${fmtE(ricaviTot-ricaviInc)}</span></div>
+      <div style="margin-top:12px;font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Per cliente</div>
+      ${topCli.map(([cli,v])=>`
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--br)">
+          <span style="color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">${cli}</span>
+          <span style="font-family:monospace;font-weight:500">${fmtE(v)}</span>
+        </div>`).join('')}`;
+  }
+
+  // ── Colonna costi ───────────────────────
+  const ceCosti=document.getElementById('ce-costi');
+  if(ceCosti){
+    const fornMap={};
+    FAT.filter(f=>f.dt.startsWith(yr)).forEach(f=>{ fornMap[f.fo]=(fornMap[f.fo]||0)+f.imp; });
+    const topForn=Object.entries(fornMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    ceCosti.innerHTML=`
+      <div class="sr"><span style="font-weight:600">Acquisti fornitori</span><span style="font-family:monospace;font-weight:700;color:var(--amber)">${fmtE(acquistiTot)}</span></div>
+      ${topForn.map(([fo,v])=>`
+        <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0 4px 10px;border-bottom:1px solid var(--br);color:var(--tx3)">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">${fo}</span>
+          <span style="font-family:monospace">${fmtE(v)}</span>
+        </div>`).join('')}
+      <div class="sr" style="margin-top:8px"><span style="font-weight:600">Spese generali</span><span style="font-family:monospace;font-weight:700;color:var(--violet)">${fmtE(speseTot)}</span></div>
+      ${Object.entries(spesePerCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0 4px 10px;border-bottom:1px solid var(--br);color:var(--tx3)">
+          <span>${SPESE_CAT[k]?.ic||''} ${SPESE_CAT[k]?.label||k}</span>
+          <span style="font-family:monospace">${fmtE(v)}</span>
+        </div>`).join('')}
+      <div class="sr" style="margin-top:8px;border-top:2px solid var(--br2)"><span style="font-weight:700">TOTALE COSTI</span><span style="font-family:monospace;font-weight:800;color:var(--red)">${fmtE(costiTot)}</span></div>`;
+  }
+
+  // ── Grafico mensile ricavi/costi/margine ─
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const mRic=Array(12).fill(0), mCos=Array(12).fill(0), mSp=Array(12).fill(0);
+  FAT_CLIENTI.filter(f=>f.dt.startsWith(yr)).forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mRic[m]+=f.imp; });
+  FAT.filter(f=>f.dt.startsWith(yr)).forEach(f=>{ const m=new Date(f.dt).getMonth(); if(!isNaN(m)) mCos[m]+=f.imp; });
+  speseCE(yr).forEach(s=>{ const m=new Date(s.dt).getMonth(); if(!isNaN(m)) mSp[m]+=s.imp; });
+  const mMarg=months.map((_,i)=>mRic[i]-(mCos[i]+mSp[i]));
+
+  const ch=document.getElementById('ce-ch-mensile');
+  if(ch) setTimeout(()=>mkStackedBar(ch,months,[
+    {label:'Ricavi',data:mRic,color:'rgba(52,211,153,.75)'},
+    {label:'Acquisti',data:mCos,color:'rgba(251,191,36,.7)'},
+    {label:'Spese gen.',data:mSp,color:'rgba(167,139,250,.7)'},
+  ],240),10);
+
+  // ── Tabella mensile ──────────────────────
+  const tb=document.getElementById('ce-tb-mensile'); if(!tb) return;
+  tb.innerHTML='';
+  months.forEach((m,i)=>{
+    const ric=mRic[i], cos=mCos[i]+mSp[i], mar=ric-cos, pct=ric>0?Math.round(mar/ric*100):0;
+    const col=mar>=0?'var(--green)':'var(--red)';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="font-weight:600">${m}</td>
+      <td style="font-family:monospace;color:var(--green)">${fmtE(ric)}</td>
+      <td style="font-family:monospace;color:var(--amber)">${fmtE(mCos[i])}</td>
+      <td style="font-family:monospace;color:var(--violet)">${fmtE(mSp[i])}</td>
+      <td style="font-family:monospace;color:var(--red)">${fmtE(cos)}</td>
+      <td style="font-family:monospace;font-weight:700;color:${col}">${mar>=0?'+':''}${fmtE(mar)}</td>
+      <td><span style="font-size:11px;font-weight:600;color:${col}">${pct}%</span></td>`;
+    tb.appendChild(tr);
+  });
+  // Riga totale
+  const trTot=document.createElement('tr');
+  trTot.style.background='rgba(255,255,255,.04)';
+  trTot.style.fontWeight='700';
+  const totMar=ricaviTot-costiTot;
+  const totCol=totMar>=0?'var(--green)':'var(--red)';
+  trTot.innerHTML=`
+    <td style="font-weight:800">TOTALE</td>
+    <td style="font-family:monospace;color:var(--green);font-weight:800">${fmtE(ricaviTot)}</td>
+    <td style="font-family:monospace;color:var(--amber);font-weight:800">${fmtE(acquistiTot)}</td>
+    <td style="font-family:monospace;color:var(--violet);font-weight:800">${fmtE(speseTot)}</td>
+    <td style="font-family:monospace;color:var(--red);font-weight:800">${fmtE(costiTot)}</td>
+    <td style="font-family:monospace;font-weight:800;color:${totCol}">${totMar>=0?'+':''}${fmtE(Math.abs(totMar))}</td>
+    <td><span style="font-size:12px;font-weight:800;color:${totCol}">${margPct}%</span></td>`;
+  tb.appendChild(trTot);
+
+  // Aggiorna summary anticipi nel CE
+  rAnticipiBars();
+}
+
+// ── EXPORT CONTO ECONOMICO ────────────────────────────────────────────────
+function exportCEXlsx(){
+  if(typeof XLSX==='undefined'){ toast('Libreria XLSX non disponibile',false); return; }
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+  const yrSel=document.getElementById('ce-yr');
+  const yr=yrSel?yrSel.value:'';
+
+  const ricaviTot =FAT_CLIENTI.filter(f=>!yr||f.dt.startsWith(yr)).reduce((s,f)=>s+f.imp,0);
+  const acquistiTot=FAT.filter(f=>!yr||f.dt.startsWith(yr)).reduce((s,f)=>s+f.imp,0);
+  const speseTot  =speseCE(yr).reduce((a,s)=>a+s.imp,0);
+  const costiTot  =acquistiTot+speseTot;
+  const margine   =ricaviTot-costiTot;
+
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const mRic=Array(12).fill(0),mCos=Array(12).fill(0),mSp=Array(12).fill(0);
+  FAT_CLIENTI.filter(f=>!yr||f.dt.startsWith(yr)).forEach(f=>{ const m=new Date(f.dt).getMonth();if(!isNaN(m))mRic[m]+=f.imp; });
+  FAT.filter(f=>!yr||f.dt.startsWith(yr)).forEach(f=>{ const m=new Date(f.dt).getMonth();if(!isNaN(m))mCos[m]+=f.imp; });
+  speseCE(yr).forEach(s=>{ const m=new Date(s.dt).getMonth();if(!isNaN(m))mSp[m]+=s.imp; });
+
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: Riepilogo
+  const ws1=XLSX.utils.aoa_to_sheet([
+    ['CONTO ECONOMICO '+(yr||'tutti gli anni')],
+    [],
+    ['RICAVI',''],
+    ['Fatturato clienti',ricaviTot],
+    [],
+    ['COSTI',''],
+    ['Acquisti fornitori',acquistiTot],
+    ['Spese generali',speseTot],
+    ['Totale costi',costiTot],
+    [],
+    ['MARGINE NETTO',margine],
+    ['Margine %',ricaviTot>0?Math.round(margine/ricaviTot*100):0],
+  ]);
+  ws1['!cols']=[{wch:28},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Riepilogo');
+
+  // Sheet 2: Mensile
+  const ws2Data=[['Mese','Ricavi clienti','Acquisti fornitori','Spese generali','Totale costi','Margine','Margine %']];
+  months.forEach((m,i)=>{
+    const cos=mCos[i]+mSp[i], mar=mRic[i]-cos;
+    ws2Data.push([m,mRic[i],mCos[i],mSp[i],cos,mar,mRic[i]>0?Math.round(mar/mRic[i]*100):0]);
+  });
+  ws2Data.push(['TOTALE',ricaviTot,acquistiTot,speseTot,costiTot,margine,ricaviTot>0?Math.round(margine/ricaviTot*100):0]);
+  const ws2=XLSX.utils.aoa_to_sheet(ws2Data);
+  ws2['!cols']=[{wch:10},{wch:16},{wch:20},{wch:16},{wch:14},{wch:14},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Mensile');
+
+  XLSX.writeFile(wb,'conto_economico_'+(yr||'totale')+'_'+today()+'.xlsx');
+  toast('Conto economico esportato');
+}
+
+function exportCEPdf(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+  FAT_CLIENTI.forEach(f=>{ f.sta=getCliStaFromScadenze(f); });
+  const yrSel=document.getElementById('ce-yr');
+  const yr=yrSel?yrSel.value:'';
+  const label=yr||'Tutti gli anni';
+
+  const ricaviTot =FAT_CLIENTI.filter(f=>!yr||f.dt.startsWith(yr)).reduce((s,f)=>s+f.imp,0);
+  const ricaviInc =FAT_CLIENTI.filter(f=>(!yr||f.dt.startsWith(yr))&&f.sta==='incassata').reduce((s,f)=>s+f.imp,0);
+  const acquistiTot=FAT.filter(f=>!yr||f.dt.startsWith(yr)).reduce((s,f)=>s+f.imp,0);
+  const speseTot  =speseCE(yr).reduce((a,s)=>a+s.imp,0);
+  const costiTot  =acquistiTot+speseTot;
+  const margine   =ricaviTot-costiTot;
+  const margPct   =ricaviTot>0?Math.round(margine/ricaviTot*100):0;
+  const e=v=>fmtE(v);
+
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const mRic=Array(12).fill(0),mCos=Array(12).fill(0),mSp=Array(12).fill(0);
+  FAT_CLIENTI.filter(f=>!yr||f.dt.startsWith(yr)).forEach(f=>{ const m=new Date(f.dt).getMonth();if(!isNaN(m))mRic[m]+=f.imp; });
+  FAT.filter(f=>!yr||f.dt.startsWith(yr)).forEach(f=>{ const m=new Date(f.dt).getMonth();if(!isNaN(m))mCos[m]+=f.imp; });
+  speseCE(yr).forEach(s=>{ const m=new Date(s.dt).getMonth();if(!isNaN(m))mSp[m]+=s.imp; });
+
+  const spesePerCat={};
+  speseCE(yr).forEach(s=>{ spesePerCat[s.cat]=(spesePerCat[s.cat]||0)+s.imp; });
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Conto Economico ${label}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a2e;background:#fff}
+.header{background:linear-gradient(135deg,#0f3460,#1a1a7e);color:#fff;padding:28px 32px}
+.header h1{font-size:24px;font-weight:800;margin-bottom:4px}
+.header p{font-size:11px;opacity:.75}
+.result-bar{padding:18px 32px;border-bottom:2px solid #e5e7eb;background:${margine>=0?'#f0fdf4':'#fef2f2'};display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.result-main{font-size:28px;font-weight:800;color:${margine>=0?'#059669':'#dc2626'}}
+.result-label{font-size:13px;color:${margine>=0?'#059669':'#dc2626'};font-weight:600}
+.kpi-row{display:flex;gap:0;background:#f8f9fc;border-bottom:1px solid #e5e7eb}
+.kpi{flex:1;padding:12px 16px;border-right:1px solid #e5e7eb;text-align:center}
+.kpi:last-child{border-right:none}
+.kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;font-weight:600;margin-bottom:4px}
+.kpi-val{font-size:16px;font-weight:800}
+.section{padding:16px 32px;border-bottom:1px solid #f3f4f6}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#374151;margin-bottom:10px;border-bottom:2px solid #e5e7eb;padding-bottom:5px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{background:#f3f4f6;padding:7px 10px;text-align:left;font-weight:600;font-size:9px;color:#6b7280;border-bottom:2px solid #e5e7eb;text-transform:uppercase}
+tbody tr:nth-child(even){background:#fafafa}
+td{padding:6px 10px;border-bottom:1px solid #f3f4f6}
+.tot-row{background:#f3f4f6!important;font-weight:800}
+.footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:10px 32px;font-size:10px;color:#9ca3af;text-align:center}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+
+<div class="header"><h1>📉 Conto Economico</h1><p>Periodo: ${label} · Generato il ${dateStr} · GestFatture Pro</p></div>
+
+<div class="result-bar">
+  <div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-bottom:4px">${margine>=0?'Utile netto':'Perdita netta'}</div>
+    <div class="result-main">${margine>=0?'▲':'▼'} ${e(Math.abs(margine))}</div>
+  </div>
+  <div class="result-label">Margine ${margPct}% sui ricavi</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-lbl">Ricavi totali</div><div class="kpi-val" style="color:#059669">${e(ricaviTot)}</div></div>
+  <div class="kpi"><div class="kpi-lbl">di cui incassato</div><div class="kpi-val" style="color:#0891b2;font-size:13px">${e(ricaviInc)}</div></div>
+  <div class="kpi"><div class="kpi-lbl">Acquisti fornitori</div><div class="kpi-val" style="color:#d97706">${e(acquistiTot)}</div></div>
+  <div class="kpi"><div class="kpi-lbl">Spese generali</div><div class="kpi-val" style="color:#7c3aed">${e(speseTot)}</div></div>
+  <div class="kpi"><div class="kpi-lbl">Totale costi</div><div class="kpi-val" style="color:#dc2626">${e(costiTot)}</div></div>
+</div>
+
+<div class="section">
+  <div class="two-col">
+    <div>
+      <div class="section-title" style="color:#059669">▲ RICAVI</div>
+      <table><tbody>
+        <tr><td style="font-weight:600">Fatturato clienti</td><td style="font-family:monospace;font-weight:700;color:#059669;text-align:right">${e(ricaviTot)}</td></tr>
+        <tr><td style="color:#6b7280;padding-left:16px">— di cui incassato</td><td style="font-family:monospace;color:#0891b2;text-align:right">${e(ricaviInc)}</td></tr>
+        <tr><td style="color:#6b7280;padding-left:16px">— da incassare</td><td style="font-family:monospace;color:#d97706;text-align:right">${e(ricaviTot-ricaviInc)}</td></tr>
+      </tbody></table>
+    </div>
+    <div>
+      <div class="section-title" style="color:#dc2626">▼ COSTI</div>
+      <table><tbody>
+        <tr><td style="font-weight:600">Acquisti fornitori</td><td style="font-family:monospace;font-weight:700;color:#d97706;text-align:right">${e(acquistiTot)}</td></tr>
+        <tr><td style="font-weight:600">Spese generali</td><td style="font-family:monospace;font-weight:700;color:#7c3aed;text-align:right">${e(speseTot)}</td></tr>
+        ${Object.entries(spesePerCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+        <tr><td style="color:#6b7280;padding-left:16px">${SPESE_CAT[k]?.ic||''} ${SPESE_CAT[k]?.label||k}</td><td style="font-family:monospace;text-align:right">${e(v)}</td></tr>`).join('')}
+        <tr class="tot-row"><td>TOTALE COSTI</td><td style="font-family:monospace;color:#dc2626;text-align:right">${e(costiTot)}</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Dettaglio mensile</div>
+  <table>
+    <thead><tr><th>Mese</th><th>Ricavi</th><th>Acquisti forn.</th><th>Spese gen.</th><th>Totale costi</th><th>Margine</th><th>%</th></tr></thead>
+    <tbody>
+      ${months.map((m,i)=>{
+        const cos=mCos[i]+mSp[i], mar=mRic[i]-cos, pct=mRic[i]>0?Math.round(mar/mRic[i]*100):0;
+        return `<tr>
+          <td style="font-weight:600">${m}</td>
+          <td style="font-family:monospace;color:#059669">${e(mRic[i])}</td>
+          <td style="font-family:monospace;color:#d97706">${e(mCos[i])}</td>
+          <td style="font-family:monospace;color:#7c3aed">${e(mSp[i])}</td>
+          <td style="font-family:monospace;color:#dc2626">${e(cos)}</td>
+          <td style="font-family:monospace;font-weight:700;color:${mar>=0?'#059669':'#dc2626'}">${mar>=0?'+':''}${e(mar)}</td>
+          <td style="font-weight:600;color:${mar>=0?'#059669':'#dc2626'}">${pct}%</td>
+        </tr>`;
+      }).join('')}
+      <tr class="tot-row">
+        <td>TOTALE</td>
+        <td style="font-family:monospace;color:#059669">${e(ricaviTot)}</td>
+        <td style="font-family:monospace;color:#d97706">${e(acquistiTot)}</td>
+        <td style="font-family:monospace;color:#7c3aed">${e(speseTot)}</td>
+        <td style="font-family:monospace;color:#dc2626">${e(costiTot)}</td>
+        <td style="font-family:monospace;color:${margine>=0?'#059669':'#dc2626'}">${margine>=0?'+':''}${e(Math.abs(margine))}</td>
+        <td style="color:${margine>=0?'#059669':'#dc2626'}">${margPct}%</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="footer">GestFatture Pro · Conto Economico ${label} · ${dateStr}</div>
+</body></html>`;
+
+  const win=window.open('','_blank','width=960,height=720');
+  win.document.write(html); win.document.close();
+  win.onload=()=>{ setTimeout(()=>win.print(),400); };
+  toast('PDF Conto Economico pronto');
+}
 // (exportCliPdf/Csv/Xlsx non modificano dati, non serve wrapping)
 
 
